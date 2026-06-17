@@ -98,7 +98,7 @@ cat ${RUN_DIR}/logs/*.out      # completed job logs
 
 The pipeline runs in three phases. Phase 1 jobs are all submitted at once and run in parallel. Phase 2 requires a manual merge step for DeepTMHMM chunks. Phase 3 fires automatically once all upstream jobs are complete.
 
-<img src="pipeline_job_flow.svg" alt="Pipeline job flow diagram showing three phases: parallel job submission, manual DeepTMHMM merge, and automated final merge">
+<img src="pipeline_job_flow.png" alt="Pipeline job flow diagram showing three phases: parallel job submission, manual DeepTMHMM merge, and automated final merge" width="100%">
 
 
 | Group | Jobs | Queue | Parallel? |
