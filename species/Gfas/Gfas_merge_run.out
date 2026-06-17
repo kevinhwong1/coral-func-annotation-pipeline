@@ -1,0 +1,133 @@
+
+============================================================
+  08_merge_annotate.py v3 — Species: Gfas
+  Loaded 6,499 Pfam name mappings
+============================================================
+
+--- Parsing annotation layers ---
+  Parsing eggNOG annotations...
+    eggNOG: 15,381 annotations
+  Parsing OrthoFinder results...
+    OrthoFinder: 17,803 genes with orthologs
+  Parsing InterProScan results...
+    InterProScan: 17,590 annotated genes
+  Parsing RBH hits...
+    RBH: 7,618 reciprocal best hits
+  Parsing SignalP predictions...
+    SignalP: 22,418 predictions
+  Parsing GFF3 for genomic coordinates...
+    GFF3: 22,418 transcripts, 6,089 scaffolds
+  Parsing DeepTMHMM predictions...
+    DeepTMHMM: 22,417 genes, 4,168 with >=1 TM helix
+  Parsing Tier 3 HMM hits...
+    Tier 3 HMM: 5,224 genes with domain hits
+  Parsing Tier 4 BLAST hits...
+    Tier 4 BLAST: 57 genes with hits
+
+--- Building gene universe ---
+  Seeded from proteome FASTA: 22,418 genes
+  Total genes: 22,418
+
+--- Merging annotation layers ---
+  Merged table: 22,418 genes × 40 columns
+
+--- Classifying genes ---
+  protein_group_secondary: 48 genes with dual roles
+
+--- Adding derived columns ---
+  best_human_gene_name: 14,074 genes
+  all_go_terms: 15,147 genes
+  cog_description: 14,101 genes
+  annotation_status: Light=16,060 (71.6%), Partial=2,230 (9.9%), Dark=4,128 (18.4%)
+  interpro_pfam_names: 16,204 genes
+  isoelectric_point / MW: 22,418 genes
+  Fetching KEGG pathway names...
+    6657 unique KOs — using KEGG batch API (10 per call)...
+    Progress: 500/6657 KOs processed...
+    Progress: 1000/6657 KOs processed...
+    Progress: 1500/6657 KOs processed...
+    Progress: 2000/6657 KOs processed...
+    Progress: 2500/6657 KOs processed...
+    Progress: 3000/6657 KOs processed...
+    Progress: 3500/6657 KOs processed...
+    Progress: 4000/6657 KOs processed...
+    Progress: 4500/6657 KOs processed...
+    Progress: 5000/6657 KOs processed...
+    Progress: 5500/6657 KOs processed...
+    Progress: 6000/6657 KOs processed...
+    Progress: 6500/6657 KOs processed...
+    Mapped 4041 KOs (0 batches failed)
+  kegg_pathway_names: 6,049 genes
+
+--- Classification summary ---
+
+Confidence tiers:
+  Gold           :  6,996  (31.2%)
+  Silver         :  5,153  (23.0%)
+  Bronze         :  2,398  (10.7%)
+  Informative    :     27  (0.1%)
+  Unclassified   :  7,844  (35.0%)
+
+Top 25 protein groups:
+  Unclassified                            : 16,863
+  GPCR                                    :   789
+  ECM_Adhesion                            :   506
+  Transcription_Factor                    :   430
+  Kinase                                  :   420
+  Signalling                              :   407
+  Innate_Immunity_PRR                     :   333
+  Calcification_Universal                 :   328
+  Innate_Immunity_Signalling              :   313
+  Lectin_Receptor                         :   307
+  Ion_Channel                             :   266
+  Innate_Immunity_Antiviral               :   247
+  Innate_Immunity_Effector                :   246
+  Symbiosis                               :   232
+  HSP_Chaperone                           :   158
+  Neuron_Neuropeptide                     :   150
+  AMP_Venom                               :   144
+  Stem_Cell_GMP                           :    64
+  Stem_Cell_Proliferation                 :    62
+  Calcification_IonTransport              :    57
+  Calcification_Signalling                :    35
+  Tier4_SCRiP                             :    31
+  Tier4_Neuropep                          :    12
+  Tier4_SOMP                              :    11
+  Stem_Cell_HSC                           :     7
+
+CellChat roles:
+  Neither                       : 15,656
+  Receptor_candidate            :  2,551
+  Receptor                      :  2,530
+  Ligand                        :  1,681
+
+--- Writing master annotation table ---
+  Written: /scratch/dark_genes/annotation_pipeline/runs/Gfas_20260605/08_final/Gfas_master_annotation.tsv
+  Shape: 22,418 genes × 53 columns
+  Columns: ['gfas_gene_id', 'eggnog_ortholog', 'eggnog_human_gene', 'eggnog_description', 'eggnog_go_terms', 'eggnog_kegg_ko', 'eggnog_kegg_pathway', 'eggnog_cog_cat', 'eggnog_pfams', 'of_orthogroup', 'of_human_ortholog', 'of_mouse_ortholog', 'of_nvec_ortholog', 'of_relationship', 'interpro_pfam', 'interpro_panther', 'interpro_go_terms', 'rbh_swissprot_acc', 'rbh_gene_name', 'rbh_pct_identity', 'rbh_evalue', 'signalp_prediction', 'signalp_prob', 'tier3_domain_hits', 'tier3_best_evalue', 'tier4_blast_hit', 'tier4_source', 'tier4_pct_identity', 'tier4_evalue', 'tier4_bitscore', 'scaffold', 'gene_start', 'gene_end', 'strand', 'gene_length_bp', 'n_exons', 'tmhmm_topology', 'tmhmm_n_tmrs', 'protein_length_aa', 'protein_sequence', 'confidence_tier', 'protein_group', 'protein_subgroup', 'protein_group_secondary', 'cellchat_role', 'best_human_gene_name', 'all_go_terms', 'cog_description', 'interpro_pfam_names', 'annotation_status', 'isoelectric_point', 'molecular_weight_kda', 'kegg_pathway_names']
+
+--- Exporting gene lists ---
+  Light_genes: 16,060 genes
+  Partial_genes: 2,230 genes
+  Dark_genes: 4,128 genes
+  CellChat_Ligand: 1,681 genes
+  CellChat_Receptor: 2,530 genes
+  CellChat_Receptor_candidate: 2,551 genes
+
+  Gene lists written: 24 functional groups
+  Gene lists directory: /scratch/dark_genes/annotation_pipeline/runs/Gfas_20260605/08_final/gene_lists/
+
+  R helper: /scratch/dark_genes/annotation_pipeline/runs/Gfas_20260605/08_final/Gfas_load_gene_lists.R
+
+============================================================
+  Pipeline complete for Gfas
+  Master table : /scratch/dark_genes/annotation_pipeline/runs/Gfas_20260605/08_final/Gfas_master_annotation.tsv
+  Gene lists   : /scratch/dark_genes/annotation_pipeline/runs/Gfas_20260605/08_final/gene_lists/
+  R helper     : /scratch/dark_genes/annotation_pipeline/runs/Gfas_20260605/08_final/Gfas_load_gene_lists.R
+============================================================
+
+=== Done ===
+total 29M
+drwxr-x--- 3 kxw755 ccsuser 4.0K Jun 16 00:31 gene_lists
+-rw-r----- 1 kxw755 ccsuser 2.7K Jun 17 11:01 Gfas_load_gene_lists.R
+-rw-r----- 1 kxw755 ccsuser  48M Jun 17 13:24 Gfas_master_annotation.tsv
