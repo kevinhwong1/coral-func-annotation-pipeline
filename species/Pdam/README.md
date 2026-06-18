@@ -1,4 +1,4 @@
-# *Pocillopora damicornis* (Pdam) Annotation Summary
+# *Pdam* Annotation Summary
 
 ## Contents
 
@@ -18,12 +18,12 @@
 | Field | Value |
 |-------|-------|
 | Genome version | Pdam_v1.0 |
-| Proteome source | [pdam.reefgenomics.org](http://pdam.reefgenomics.org/) |
+| Proteome source | http://pdam.reefgenomics.org/ |
 | Proteome file | `pdam_proteins.fasta` |
-| GFF3 file | `pdam_genome.gff3` |
-| Pipeline run date | 2026-06-16 |
+| GFF3 file | `pdam_annotation.gff3` |
+| Pipeline run date | 2026-06-18 |
 | Merge script | `08_merge_annotate.py` |
-| Master table | `Pdam_master_annotation.tsv` (26,077 genes × 53 columns) |
+| Master table | `Pdam_master_annotation.tsv` (26,077 genes x 53 columns) |
 
 See [`docs/column_descriptions.md`](../../docs/column_descriptions.md) for full column schema and [`docs/classification_system.md`](../../docs/classification_system.md) for classification logic and protein group definitions.
 
@@ -36,12 +36,12 @@ See [`docs/column_descriptions.md`](../../docs/column_descriptions.md) for full 
 | Total genes | 26,077 |
 | Scaffolds | 1,968 |
 | Genes with eggNOG annotation | 15,370 (58.9%) |
-| Genes with OrthoFinder ortholog | 19,908 (76.3%) |
-| Genes with InterProScan annotation | 17,943 (68.8%) |
+| Genes with OrthoFinder ortholog | 12,304 (47.2%) |
+| Genes with InterProScan annotation | 16,600 (63.7%) |
 | Genes with RBH SwissProt hit | 7,659 (29.4%) |
 | Genes with Tier 3 HMM domain hit | 5,381 (20.6%) |
 | Genes with Tier 4 BLAST hit | 68 (0.3%) |
-| Genes with ≥1 TM helix (DeepTMHMM) | 5,157 (19.8%) |
+| Genes with >=1 TM helix (DeepTMHMM) | 5,157 (19.8%) |
 | Genes with signal peptide SP (SignalP) | 2,502 (9.6%) |
 | Genes with best human gene name | 14,481 (55.5%) |
 | Genes with GO terms (any source) | 15,486 (59.4%) |
@@ -139,7 +139,7 @@ Total putative signalling genes (Ligand + Receptor + Receptor_candidate): **7,77
 | DeepTMHMM | 1.0 | 2,000-sequence chunks |
 | HMMER | 3.4 | 179 Tier 3 profiles |
 | BioPython | v1.87 | pI and MW computation |
-| 08_merge_annotate.py | — | Integrates all 7 annotation layers; assigns confidence tiers, protein groups, CellChat roles, pI/MW, KEGG pathway names |
+| 08_merge_annotate.py | | Integrates all 7 annotation layers; assigns confidence tiers, protein groups, CellChat roles, pI/MW, KEGG pathway names |
 
 ---
 

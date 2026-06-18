@@ -1,0 +1,134 @@
+
+============================================================
+  08_merge_annotate.py v3 — Species: Pdam
+  Loaded 6,499 Pfam name mappings
+============================================================
+
+--- Parsing annotation layers ---
+  Parsing eggNOG annotations...
+    eggNOG: 15,370 annotations
+  Parsing OrthoFinder results...
+    OrthoFinder: 19,908 genes with orthologs
+  Parsing InterProScan results...
+    InterProScan: 17,943 annotated genes
+  Parsing RBH hits...
+    RBH: 7,659 reciprocal best hits
+  Parsing SignalP predictions...
+    SignalP: 26,077 predictions
+  Parsing GFF3 for genomic coordinates...
+    GFF3: 26,077 transcripts, 1,968 scaffolds
+  Parsing DeepTMHMM predictions...
+    DeepTMHMM: 26,063 genes, 5,157 with >=1 TM helix
+  Parsing Tier 3 HMM hits...
+    Tier 3 HMM: 5,381 genes with domain hits
+  Parsing Tier 4 BLAST hits...
+    Tier 4 BLAST: 68 genes with hits
+
+--- Building gene universe ---
+  Seeded from proteome FASTA: 26,077 genes
+  Total genes: 26,077
+
+--- Merging annotation layers ---
+  Merged table: 26,077 genes × 40 columns
+
+--- Classifying genes ---
+  protein_group_secondary: 57 genes with dual roles
+
+--- Adding derived columns ---
+  best_human_gene_name: 14,481 genes
+  all_go_terms: 15,486 genes
+  cog_description: 14,330 genes
+  annotation_status: Light=16,756 (64.3%), Partial=2,435 (9.3%), Dark=6,886 (26.4%)
+  interpro_pfam_names: 16,305 genes
+  isoelectric_point / MW: 26,077 genes
+  Fetching KEGG pathway names...
+    6694 unique KOs — using KEGG batch API (10 per call)...
+    Progress: 500/6694 KOs processed...
+    Progress: 1000/6694 KOs processed...
+    Progress: 1500/6694 KOs processed...
+    Progress: 2000/6694 KOs processed...
+    Progress: 2500/6694 KOs processed...
+    Progress: 3000/6694 KOs processed...
+    Progress: 3500/6694 KOs processed...
+    Progress: 4000/6694 KOs processed...
+    Progress: 4500/6694 KOs processed...
+    Progress: 5000/6694 KOs processed...
+    Progress: 5500/6694 KOs processed...
+    Progress: 6000/6694 KOs processed...
+    Progress: 6500/6694 KOs processed...
+    Mapped 4046 KOs (0 batches failed)
+  kegg_pathway_names: 6,080 genes
+
+--- Classification summary ---
+
+Confidence tiers:
+  Gold           :  7,066  (27.1%)
+  Silver         :  5,620  (21.6%)
+  Bronze         :  2,630  (10.1%)
+  Informative    :     15  (0.1%)
+  Unclassified   : 10,746  (41.2%)
+
+Top 25 protein groups:
+  Unclassified                            : 20,134
+  GPCR                                    : 1,074
+  ECM_Adhesion                            :   550
+  Transcription_Factor                    :   465
+  Kinase                                  :   419
+  Signalling                              :   408
+  Innate_Immunity_PRR                     :   363
+  Innate_Immunity_Signalling              :   353
+  Calcification_Universal                 :   326
+  Lectin_Receptor                         :   289
+  Ion_Channel                             :   283
+  Symbiosis                               :   254
+  Innate_Immunity_Effector                :   249
+  AMP_Venom                               :   176
+  Innate_Immunity_Antiviral               :   155
+  Neuron_Neuropeptide                     :   145
+  HSP_Chaperone                           :   132
+  Stem_Cell_Proliferation                 :    66
+  Stem_Cell_GMP                           :    58
+  Calcification_IonTransport              :    56
+  Calcification_Signalling                :    51
+  Tier4_SCRiP                             :    45
+  Tier4_SOMP                              :    10
+  Tier4_Neuropep                          :    10
+  Stem_Cell_HSC                           :     6
+
+CellChat roles:
+  Neither                       : 18,300
+  Receptor_candidate            :  3,086
+  Receptor                      :  2,952
+  Ligand                        :  1,739
+
+--- Writing master annotation table ---
+  Written: /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/Pdam_master_annotation.tsv
+  Shape: 26,077 genes × 53 columns
+  Columns: ['pdam_gene_id', 'eggnog_ortholog', 'eggnog_human_gene', 'eggnog_description', 'eggnog_go_terms', 'eggnog_kegg_ko', 'eggnog_kegg_pathway', 'eggnog_cog_cat', 'eggnog_pfams', 'of_orthogroup', 'of_human_ortholog', 'of_mouse_ortholog', 'of_nvec_ortholog', 'of_relationship', 'interpro_pfam', 'interpro_panther', 'interpro_go_terms', 'rbh_swissprot_acc', 'rbh_gene_name', 'rbh_pct_identity', 'rbh_evalue', 'signalp_prediction', 'signalp_prob', 'tier3_domain_hits', 'tier3_best_evalue', 'tier4_blast_hit', 'tier4_source', 'tier4_pct_identity', 'tier4_evalue', 'tier4_bitscore', 'scaffold', 'gene_start', 'gene_end', 'strand', 'gene_length_bp', 'n_exons', 'tmhmm_topology', 'tmhmm_n_tmrs', 'protein_length_aa', 'protein_sequence', 'confidence_tier', 'protein_group', 'protein_subgroup', 'protein_group_secondary', 'cellchat_role', 'best_human_gene_name', 'all_go_terms', 'cog_description', 'interpro_pfam_names', 'annotation_status', 'isoelectric_point', 'molecular_weight_kda', 'kegg_pathway_names']
+
+--- Exporting gene lists ---
+  Light_genes: 16,756 genes
+  Partial_genes: 2,435 genes
+  Dark_genes: 6,886 genes
+  CellChat_Ligand: 1,739 genes
+  CellChat_Receptor: 2,952 genes
+  CellChat_Receptor_candidate: 3,086 genes
+
+  Gene lists written: 24 functional groups
+  Gene lists directory: /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/gene_lists/
+
+  R helper: /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/Pdam_load_gene_lists.R
+
+  Annotation summary: /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/Pdam_annotation_summary.md
+
+============================================================
+  Pipeline complete for Pdam
+  Master table : /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/Pdam_master_annotation.tsv
+  Gene lists   : /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/gene_lists/
+  R helper     : /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/Pdam_load_gene_lists.R
+  Summary MD   : /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/Pdam_annotation_summary.md
+  Merge log    : /scratch/dark_genes/annotation_pipeline/runs/Pdam_20260616/08_final/Pdam_merge_run.out
+============================================================
+
+
+--- Staging outputs to /nethome/kxw755/github_upload ---
