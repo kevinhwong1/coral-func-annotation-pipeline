@@ -19,7 +19,7 @@
 
 ---
 
-Master annotation table schema (53 columns).
+Master annotation table schema. Standard species (Gfas, Pdam, Amil, Spis, Opat, Xspp, Nvec): 53 columns. NCBI-sourced species (Acer, Ofav, Amur): 54 columns, with `{species}_locus_tag` added at column 2.
 
 ---
 

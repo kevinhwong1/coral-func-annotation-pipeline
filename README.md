@@ -55,7 +55,7 @@ Proteome sequences are not hosted in this repository. Download from the sources 
 | *Acropora millepora* | Amil | | | | | | | | | | planned |
 | *Stylophora pistillata* | Spis | | | | | | | | | | planned |
 | *Oculina patagonica* | Opat | | | | | | | | | | planned |
-| *Acropora cervicornis* | Acer | | | | | | | | | | planned |
+| *Acropora cervicornis* | Acer | 28,059 | 24.4% | 18.5% | 8.3% | 0.0% | 48.7% | 62.0% | 10.0% | 28.0% | 2026-06-18 |
 | *Orbicella faveolata* | Ofav | | | | | | | | | | planned |
 | *Xenia* spp. | Xspp | | | | | | | | | | planned |
 | *Acropora muricata* | Amur | | | | | | | | | | planned |
@@ -144,9 +144,13 @@ coral-func-annotation-pipeline/
 │   ├── Amur/                            # Same structure as Gfas
 │   └── Nvec/                            # Same structure as Gfas
 │
-└── docs/
-    ├── column_descriptions.md           # Full 53-column schema with types, examples, citations
-    └── classification_system.md         # Tier logic, protein groups, CellChat roles, citations
+├── docs/
+│   ├── column_descriptions.md           # Full 53-column schema with types, examples, citations
+│   └── classification_system.md         # Tier logic, protein groups, CellChat roles, citations
+│
+└── examples/
+    ├── load_annotation.R                # Quick Seurat/tidyverse join example
+    └── load_annotation.py               # Quick pandas example
 ```
 
 ---

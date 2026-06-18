@@ -52,6 +52,7 @@ OPT_GFF3=""
 OPT_GENOME_VERSION=""
 OPT_PROTEOME_SOURCE=""
 OPT_STAGING_DIR=""
+OPT_GENE_TO_PROTEIN=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -60,6 +61,7 @@ while [[ $# -gt 0 ]]; do
         --genome_version)  OPT_GENOME_VERSION="$2";  shift 2 ;;
         --proteome_source) OPT_PROTEOME_SOURCE="$2"; shift 2 ;;
         --staging_dir)     OPT_STAGING_DIR="$2";     shift 2 ;;
+        --gene_to_protein) OPT_GENE_TO_PROTEIN="$2"; shift 2 ;;
         *) echo "ERROR: Unknown option: $1" >&2; exit 1 ;;
     esac
 done
@@ -73,6 +75,7 @@ source "${SCRIPT_DIR}/run_config.sh" "${SPECIES}" "${OPT_PROTEOME}"
 [[ -n "${OPT_GENOME_VERSION}" ]]  && export GENOME_VERSION="${OPT_GENOME_VERSION}"
 [[ -n "${OPT_PROTEOME_SOURCE}" ]] && export PROTEOME_SOURCE="${OPT_PROTEOME_SOURCE}"
 [[ -n "${OPT_STAGING_DIR}" ]]     && export STAGING_DIR="${OPT_STAGING_DIR}"
+[[ -n "${OPT_GENE_TO_PROTEIN}" ]] && export GENE_TO_PROTEIN="${OPT_GENE_TO_PROTEIN}"
 
 echo "============================================================"
 echo " Annotation Pipeline v4 Submission"
@@ -114,6 +117,37 @@ if [[ ! -f "${QUERY_PROTEOME}.pdb" ]]; then
 else
     echo "  BLAST database already exists. Skipping."
 fi
+
+# ── Generate gene-to-protein CSV ─────────────────────────────
+echo ""
+echo "--- Generating gene-to-protein mapping ---"
+GENE_TO_PROTEIN_CSV="${RUN_DIR}/${SPECIES}_gene_to_protein.csv"
+python3 << 'PYEOF'
+import re, csv
+fasta = "${QUERY_PROTEOME}"
+out   = "${GENE_TO_PROTEIN_CSV}"
+rows  = []
+with open(fasta) as f:
+    for line in f:
+        if not line.startswith('>'):
+            continue
+        line = line[1:].strip()
+        parts = line.split()
+        gene_id = parts[0]
+        desc = ' '.join(parts[1:])
+        # Extract locus tag from NCBI headers (e.g. P5673_033792)
+        # For non-NCBI species, locus_tag = gene_id (self-mapping)
+        match = re.search(r'\b([A-Z][A-Z0-9]+_\d{4,})\b', desc)
+        locus_tag = match.group(1) if match else gene_id
+        rows.append((gene_id, locus_tag))
+with open(out, 'w', newline='') as f:
+    w = csv.writer(f)
+    w.writerow(['gene_id', 'protein_id'])
+    w.writerows(rows)
+print(f"  Written: {out} ({len(rows)} entries)")
+PYEOF
+# Only use auto-generated CSV if no pre-configured path exists
+[[ -z "${GENE_TO_PROTEIN}" ]] && export GENE_TO_PROTEIN="${GENE_TO_PROTEIN_CSV}"
 
 # ── Assemble OrthoFinder input directory ────────────────────
 echo ""
@@ -566,8 +600,10 @@ rev = {}
 with open(rev_file) as f:
     for row in csv.reader(f, delimiter='\t'):
         q, s, pct, ev, score = row
+        # Strip database prefix from subject ID (e.g. gb|KAK2546616.1| -> KAK2546616.1)
+        s_clean = s.split('|')[1] if s.count('|') >= 2 else s
         if q not in rev:
-            rev[q] = (s, float(pct), float(ev))
+            rev[q] = (s_clean, float(pct), float(ev))
 
 sprot_names = {}
 with open(sprot_fasta) as f:
@@ -709,7 +745,8 @@ python3 "/scratch/dark_genes/annotation_pipeline/scripts/08_merge_annotate.py" \
     --out_genelists   "${GENE_LISTS_DIR}" \
     --genome_version  "${GENOME_VERSION}" \
     --proteome_source "${PROTEOME_SOURCE}" \
-    --staging_dir     "${STAGING_DIR}"
+    --staging_dir     "${STAGING_DIR}" \
+    --gene_to_protein "${GENE_TO_PROTEIN}"
 
 echo "=== Pipeline complete for ${SPECIES} ===" && date
 BSUB

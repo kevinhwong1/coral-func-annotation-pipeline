@@ -1,0 +1,135 @@
+
+============================================================
+  08_merge_annotate.py v3 — Species: Acer
+  Loaded 6,499 Pfam name mappings
+============================================================
+
+--- Parsing annotation layers ---
+  Parsing eggNOG annotations...
+    eggNOG: 17,294 annotations
+  Parsing OrthoFinder results...
+    OrthoFinder: 18,883 genes with orthologs
+  Parsing InterProScan results...
+    InterProScan: 19,152 annotated genes
+  Parsing RBH hits...
+    RBH: 7,486 reciprocal best hits
+  Parsing SignalP predictions...
+    SignalP: 28,059 predictions
+  Parsing GFF3 for genomic coordinates...
+    Gene-to-protein map: 28,059 locus tag -> FASTA ID entries
+    GFF3: 28,059 transcripts, 379 scaffolds (28,059 mapped via locus tag)
+  Parsing DeepTMHMM predictions...
+    DeepTMHMM: 28,044 genes, 4,251 with >=1 TM helix
+  Parsing Tier 3 HMM hits...
+    Tier 3 HMM: 4,623 genes with domain hits
+  Parsing Tier 4 BLAST hits...
+    Tier 4 BLAST: 48 genes with hits
+
+--- Building gene universe ---
+  Seeded from proteome FASTA: 28,059 genes
+  Total genes: 28,059
+
+--- Merging annotation layers ---
+  Merged table: 28,059 genes × 41 columns
+
+--- Classifying genes ---
+  protein_group_secondary: 51 genes with dual roles
+
+--- Adding derived columns ---
+  best_human_gene_name: 14,144 genes
+  all_go_terms: 15,259 genes
+  cog_description: 15,372 genes
+  annotation_status: Light=17,392 (62.0%), Partial=2,807 (10.0%), Dark=7,860 (28.0%)
+  interpro_pfam_names: 16,494 genes
+  isoelectric_point / MW: 28,059 genes
+  Fetching KEGG pathway names...
+    6564 unique KOs — using KEGG batch API (10 per call)...
+    Progress: 500/6564 KOs processed...
+    Progress: 1000/6564 KOs processed...
+    Progress: 1500/6564 KOs processed...
+    Progress: 2000/6564 KOs processed...
+    Progress: 2500/6564 KOs processed...
+    Progress: 3000/6564 KOs processed...
+    Progress: 3500/6564 KOs processed...
+    Progress: 4000/6564 KOs processed...
+    Progress: 4500/6564 KOs processed...
+    Progress: 5000/6564 KOs processed...
+    Progress: 5500/6564 KOs processed...
+    Progress: 6000/6564 KOs processed...
+    Progress: 6500/6564 KOs processed...
+    Mapped 3961 KOs (0 batches failed)
+  kegg_pathway_names: 5,839 genes
+
+--- Classification summary ---
+
+Confidence tiers:
+  Gold           :  6,846  (24.4%)
+  Silver         :  5,186  (18.5%)
+  Bronze         :  2,339  (8.3%)
+  Informative    :     14  (0.0%)
+  Unclassified   : 13,674  (48.7%)
+
+Top 25 protein groups:
+  Unclassified                            : 23,071
+  GPCR                                    :   756
+  Transcription_Factor                    :   469
+  Signalling                              :   410
+  ECM_Adhesion                            :   377
+  Kinase                                  :   369
+  Innate_Immunity_Signalling              :   332
+  Calcification_Universal                 :   255
+  Innate_Immunity_PRR                     :   255
+  Ion_Channel                             :   251
+  Symbiosis                               :   244
+  Innate_Immunity_Effector                :   214
+  Lectin_Receptor                         :   196
+  Innate_Immunity_Antiviral               :   168
+  HSP_Chaperone                           :   149
+  Neuron_Neuropeptide                     :   148
+  AMP_Venom                               :   123
+  Stem_Cell_GMP                           :    76
+  Stem_Cell_Proliferation                 :    57
+  Calcification_IonTransport              :    47
+  Calcification_Signalling                :    41
+  Tier4_SCRiP                             :    31
+  Tier4_Neuropep                          :     9
+  Stem_Cell_HSC                           :     6
+  Tier4_SOMP                              :     5
+
+CellChat roles:
+  Neither                       : 21,583
+  Receptor_candidate            :  2,658
+  Receptor                      :  2,278
+  Ligand                        :  1,540
+
+--- Writing master annotation table ---
+  Written: /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/Acer_master_annotation.tsv
+  Shape: 28,059 genes × 54 columns
+  Columns: ['acer_gene_id', 'eggnog_ortholog', 'eggnog_human_gene', 'eggnog_description', 'eggnog_go_terms', 'eggnog_kegg_ko', 'eggnog_kegg_pathway', 'eggnog_cog_cat', 'eggnog_pfams', 'of_orthogroup', 'of_human_ortholog', 'of_mouse_ortholog', 'of_nvec_ortholog', 'of_relationship', 'interpro_pfam', 'interpro_panther', 'interpro_go_terms', 'rbh_swissprot_acc', 'rbh_gene_name', 'rbh_pct_identity', 'rbh_evalue', 'signalp_prediction', 'signalp_prob', 'tier3_domain_hits', 'tier3_best_evalue', 'tier4_blast_hit', 'tier4_source', 'tier4_pct_identity', 'tier4_evalue', 'tier4_bitscore', 'acer_locus_tag', 'scaffold', 'gene_start', 'gene_end', 'strand', 'gene_length_bp', 'n_exons', 'tmhmm_topology', 'tmhmm_n_tmrs', 'protein_length_aa', 'protein_sequence', 'confidence_tier', 'protein_group', 'protein_subgroup', 'protein_group_secondary', 'cellchat_role', 'best_human_gene_name', 'all_go_terms', 'cog_description', 'interpro_pfam_names', 'annotation_status', 'isoelectric_point', 'molecular_weight_kda', 'kegg_pathway_names']
+
+--- Exporting gene lists ---
+  Light_genes: 17,392 genes
+  Partial_genes: 2,807 genes
+  Dark_genes: 7,860 genes
+  CellChat_Ligand: 1,540 genes
+  CellChat_Receptor: 2,278 genes
+  CellChat_Receptor_candidate: 2,658 genes
+
+  Gene lists written: 24 functional groups
+  Gene lists directory: /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/gene_lists/
+
+  R helper: /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/Acer_load_gene_lists.R
+
+  Annotation summary: /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/Acer_annotation_summary.md
+
+============================================================
+  Pipeline complete for Acer
+  Master table : /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/Acer_master_annotation.tsv
+  Gene lists   : /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/gene_lists/
+  R helper     : /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/Acer_load_gene_lists.R
+  Summary MD   : /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/Acer_annotation_summary.md
+  Merge log    : /scratch/dark_genes/annotation_pipeline/runs/Acer_20260618/08_final/Acer_merge_run.out
+============================================================
+
+
+--- Staging outputs to /nethome/kxw755/github_upload ---

@@ -704,15 +704,35 @@ def map_kegg_pathways(ko_col, ko_to_pathway):
 # PARSING FUNCTIONS
 # ============================================================
 
-def parse_gff3(gff3_file):
-    """Parse GFF3 to extract genomic coordinates and exon counts per transcript."""
+def parse_gff3(gff3_file, gene_to_protein_csv=''):
+    """Parse GFF3 to extract genomic coordinates and exon counts per transcript.
+
+    For standard GFF3 (Gfas, Pdam): mRNA ID matches protein FASTA ID directly.
+    For NCBI GFF3 (Acer, Ofav, Amur): mRNA ID uses gnl|WGS|... format; protein
+    FASTA IDs are KAK accessions. A gene_to_protein CSV is used to bridge them
+    via the shared locus_tag field.
+
+    The CSV must have columns: gene_id (protein FASTA accession), protein_id (locus tag).
+    """
     print("  Parsing GFF3 for genomic coordinates...")
     if not gff3_file or not Path(gff3_file).exists():
         print(f"    WARNING: GFF3 not found: {gff3_file}")
         return pd.DataFrame()
 
+    # Build locus_tag -> protein FASTA ID mapping if CSV provided
+    locus_to_fasta = {}
+    if gene_to_protein_csv and Path(gene_to_protein_csv).exists():
+        import csv as _csv
+        with open(gene_to_protein_csv) as _f:
+            for row in _csv.DictReader(_f):
+                # gene_id = KAK254xxxx (protein FASTA), protein_id = P5673_xxxxxx (locus tag)
+                locus_to_fasta[row['protein_id']] = row['gene_id']
+        print(f"    Gene-to-protein map: {len(locus_to_fasta):,} locus tag -> FASTA ID entries")
+
     rows = []
     exon_counts = {}
+    # Track mRNA internal ID -> protein FASTA ID for exon parent matching
+    mrna_id_to_fasta = {}
 
     with open(gff3_file) as f:
         for line in f:
@@ -728,26 +748,48 @@ def parse_gff3(gff3_file):
                 if '=' in attr:
                     k, v = attr.split('=', 1)
                     attr_dict[k] = v
-            gene_id = attr_dict.get('ID', '')
+
             if ftype in ('mRNA', 'transcript'):
+                mrna_id = attr_dict.get('ID', '')
+                locus_tag = attr_dict.get('locus_tag', '')
+
+                # Determine protein FASTA ID
+                if locus_to_fasta and locus_tag:
+                    fasta_id = locus_to_fasta.get(locus_tag, '')
+                    gff_protein_id = locus_tag  # store locus tag as bridge ID
+                else:
+                    fasta_id = mrna_id
+                    gff_protein_id = ''
+
+                if not fasta_id:
+                    continue
+
+                mrna_id_to_fasta[mrna_id] = fasta_id
                 rows.append({
-                    'gene_id':   gene_id,
-                    'scaffold':       seqid,
-                    'gene_start':     int(start),
-                    'gene_end':       int(end),
-                    'strand':         strand,
-                    'gene_length_bp': int(end) - int(start) + 1,
+                    'gene_id':          fasta_id,
+                    'acer_locus_tag':   locus_tag if locus_to_fasta else '',
+                    'scaffold':         seqid,
+                    'gene_start':       int(start),
+                    'gene_end':         int(end),
+                    'strand':           strand,
+                    'gene_length_bp':   int(end) - int(start) + 1,
                 })
-                exon_counts[gene_id] = 0
+                exon_counts[fasta_id] = 0
+
             elif ftype == 'exon':
-                parent = attr_dict.get('Parent', '')
-                if parent in exon_counts:
-                    exon_counts[parent] += 1
+                parent_mrna = attr_dict.get('Parent', '')
+                fasta_id = mrna_id_to_fasta.get(parent_mrna, '')
+                if fasta_id and fasta_id in exon_counts:
+                    exon_counts[fasta_id] += 1
 
     df = pd.DataFrame(rows)
     if not df.empty:
         df['n_exons'] = df['gene_id'].map(exon_counts).fillna(0).astype(int)
-        print(f"    GFF3: {len(df):,} transcripts, {len(df['scaffold'].unique()):,} scaffolds")
+        mapped = (df['acer_locus_tag'] != '').sum() if 'acer_locus_tag' in df.columns else 0
+        if mapped:
+            print(f"    GFF3: {len(df):,} transcripts, {df['scaffold'].nunique():,} scaffolds ({mapped:,} mapped via locus tag)")
+        else:
+            print(f"    GFF3: {len(df):,} transcripts, {df['scaffold'].nunique():,} scaffolds")
     return df
 
 
@@ -1459,6 +1501,11 @@ def main():
                         help='Root staging directory for GitHub upload '
                              '(e.g. /nethome/kxw755/github_upload). '
                              'If provided, outputs are copied here after completion.')
+    parser.add_argument('--gene_to_protein', default='',
+                        help='CSV mapping protein FASTA IDs to locus tags (for NCBI genomes). '
+                             'Required columns: gene_id (protein FASTA accession), '
+                             'protein_id (locus tag e.g. P5673_xxxxxx). '
+                             'Enables GFF3 coordinate parsing for NCBI-formatted genomes.')
     args = parser.parse_args()
 
     species = args.species
@@ -1511,7 +1558,7 @@ def main():
     df_ips    = parse_interproscan(args.interproscan)
     df_rbh    = parse_rbh(args.rbh)
     df_sp     = parse_signalp(args.signalp)
-    df_gff    = parse_gff3(args.gff3) if args.gff3 else pd.DataFrame()
+    df_gff    = parse_gff3(args.gff3, args.gene_to_protein) if args.gff3 else pd.DataFrame()
     df_tm     = parse_tmhmm(args.tmhmm) if args.tmhmm else pd.DataFrame()
     df_t3     = parse_tier3(args.tier3)
     df_t4     = parse_tier4(args.tier4)
@@ -1562,6 +1609,9 @@ def main():
     master = safe_merge(master, df_t3)
     master = safe_merge(master, df_t4)
     if not df_gff.empty:
+        # Drop acer_locus_tag column if empty (non-NCBI species where no mapping was used)
+        if 'acer_locus_tag' in df_gff.columns and (df_gff['acer_locus_tag'].fillna('') == '').all():
+            df_gff = df_gff.drop(columns=['acer_locus_tag'])
         master = safe_merge(master, df_gff)
     if not df_tm.empty:
         master = safe_merge(master, df_tm)
@@ -1700,6 +1750,14 @@ def main():
     # ── Step 7: Write master table ────────────────────────────
     print(f"\n--- Writing master annotation table ---")
     Path(args.out_table).parent.mkdir(parents=True, exist_ok=True)
+    # ── Reorder columns: move {species}_locus_tag to col 2 if present ──
+    locus_col = f"{species.lower()}_locus_tag"
+    if locus_col in master.columns:
+        cols = list(master.columns)
+        cols.remove(locus_col)
+        cols.insert(1, locus_col)
+        master = master[cols]
+
     master.to_csv(args.out_table, sep='\t', index=False)
     print(f"  Written: {args.out_table}")
     print(f"  Shape: {master.shape[0]:,} genes × {master.shape[1]} columns")
@@ -1888,7 +1946,7 @@ cat("\\nDone.\\n")
 | GFF3 file | `{gff3_file}` |
 | Pipeline run date | {today} |
 | Merge script | `08_merge_annotate.py` |
-| Master table | `{species}_master_annotation.tsv` ({n_genes:,} genes x 53 columns) |
+| Master table | `{species}_master_annotation.tsv` ({n_genes:,} genes x {master.shape[1]} columns) |
 
 See [`docs/column_descriptions.md`](../../docs/column_descriptions.md) for full column schema and [`docs/classification_system.md`](../../docs/classification_system.md) for classification logic and protein group definitions.
 

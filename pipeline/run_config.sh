@@ -81,6 +81,7 @@ configure_species() {
     export GENOME_VERSION="${GENOME_VERSION:-}"
     export PROTEOME_SOURCE="${PROTEOME_SOURCE:-}"
     export STAGING_DIR="${STAGING_DIR:-${NETHOME}/github_upload}"
+    export GENE_TO_PROTEIN="${GENE_TO_PROTEIN:-}"
 
     # Default proteome paths per species — add new species here
     case "${SPECIES}" in
@@ -101,18 +102,21 @@ configure_species() {
             export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/GCA_032359415.1_Acer/genomic.gff}"
             export GENOME_VERSION="${GENOME_VERSION:-GCA_032359415.1}"
             export PROTEOME_SOURCE="${PROTEOME_SOURCE:-https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_032359415.1/}"
+            export GENE_TO_PROTEIN="${GENE_TO_PROTEIN:-${NETHOME}/genomes/GCA_032359415.1_Acer/acer_gene_to_protein.csv}"
             ;;
         Ofav)
             export QUERY_PROTEOME="${PROTEOME_ARG:-${NETHOME}/genomes/GCA_042242905.1_Ofav/ofav_protein.faa}"
             export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/GCA_042242905.1_Ofav/genomic.gff}"
             export GENOME_VERSION="${GENOME_VERSION:-GCA_042242905.1}"
             export PROTEOME_SOURCE="${PROTEOME_SOURCE:-https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_042242905.1/}"
+            export GENE_TO_PROTEIN="${GENE_TO_PROTEIN:-${NETHOME}/genomes/GCA_042242905.1_Ofav/ofav_gene_to_protein.csv}"
             ;;
         Amur)
             export QUERY_PROTEOME="${PROTEOME_ARG:-${NETHOME}/genomes/GCF_036669905.1_Amur/amur_protein.faa}"
             export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/GCF_036669905.1_Amur/genomic.gff}"
             export GENOME_VERSION="${GENOME_VERSION:-GCF_036669905.1}"
             export PROTEOME_SOURCE="${PROTEOME_SOURCE:-https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_036669905.1/}"
+            export GENE_TO_PROTEIN="${GENE_TO_PROTEIN:-${NETHOME}/genomes/GCF_036669905.1_Amur/amur_gene_to_protein.csv}"
             ;;
         Amil)
             export QUERY_PROTEOME="${PROTEOME_ARG:-${NETHOME}/genomes/Amil/Amil_long.pep.fasta}"

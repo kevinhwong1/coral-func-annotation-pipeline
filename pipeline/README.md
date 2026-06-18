@@ -56,40 +56,43 @@ This script:
 
 ## Running the Pipeline for a New Species
 
-### 1. Configure `run_config.sh`
-
-Edit the paths at the top of `run_config.sh` for your species:
-
-```bash
-SPECIES="Pdam"
-PROTEOME="/path/to/pdam_proteins.fasta"
-GFF3="/path/to/pdam_annotation.gff3"
-RUN_DIR="/scratch/your_project/runs/Pdam_$(date +%Y%m%d)"
-```
-
-### 2. Activate the environment
+### 1. Activate the environment
 
 ```bash
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate annotation_env
 ```
 
-### 3. Submit all jobs
+### 2. Submit all jobs
+
+All 10 project species are pre-configured in `run_config.sh` with proteome paths, GFF3, genome version, and source URL. Submit with just the species code:
 
 ```bash
-bash pipeline/submit_pipeline.sh <SPECIES>
-# e.g. bash pipeline/submit_pipeline.sh Pdam
+bash /scratch/dark_genes/annotation_pipeline/scripts/submit_pipeline.sh Acer
 ```
 
-This generates and submits all BSUB job scripts to the run directory. Jobs are submitted with LSF dependencies so they fire in the correct order. Job scripts are written to `${RUN_DIR}/logs/` at submission time.
-
-### 4. Monitor jobs
+For a species not in `run_config.sh`, pass paths directly as flags — no config file edits required:
 
 ```bash
-bjobs                          # all running jobs
-bjobs -l <JID>                 # detail for one job
-bpeek <JID>                    # live stdout
-cat ${RUN_DIR}/logs/*.out      # completed job logs
+bash /scratch/dark_genes/annotation_pipeline/scripts/submit_pipeline.sh MySpecies \
+    --proteome        /path/to/proteome.fasta \
+    --gff3            /path/to/annotation.gff3 \
+    --genome_version  "MySpecies_v1.0" \
+    --proteome_source "https://source.url/" \
+    --staging_dir     "/nethome/kxw755/github_upload"
+```
+
+Flags override `run_config.sh` defaults when provided, so they can also be used to temporarily override a pre-configured path without editing the config file.
+
+`submit_pipeline.sh` generates all BSUB scripts, submits them with LSF dependencies, and writes job scripts to `${RUN_DIR}/logs/` at submission time. The run directory is created automatically as `${BASE}/runs/${SPECIES}_$(date +%Y%m%d)`.
+
+### 3. Monitor jobs
+
+```bash
+bjobs -u kxw755 | grep <SPECIES>  # jobs for this species
+bjobs -l <JID>                    # detail for one job
+bpeek <JID>                       # live stdout
+cat ${RUN_DIR}/logs/*.out         # completed job logs
 ```
 
 ---
@@ -281,6 +284,23 @@ conda activate orthofinder_env
 
 ---
 
+## Adding a New Species to `run_config.sh`
+
+New species can be run without editing `run_config.sh` by passing paths as flags (see above). To permanently add a species, add a case block to the `configure_species()` function in `run_config.sh`:
+
+```bash
+MySpecies)
+    export QUERY_PROTEOME="${PROTEOME_ARG:-${NETHOME}/genomes/MySpecies/proteome.fasta}"
+    export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/MySpecies/annotation.gff3}"
+    export GENOME_VERSION="${GENOME_VERSION:-MySpecies_v1.0}"
+    export PROTEOME_SOURCE="${PROTEOME_SOURCE:-https://source.url/}"
+    ;;
+```
+
+All four variables are optional — if not set, they default to empty strings and the merge script handles them gracefully.
+
+---
+
 ## Run Directory Structure
 
 Each species run creates the following directory structure:
@@ -343,6 +363,11 @@ These issues were encountered during development and are fixed in the current sc
 | Line continuation (`\`) in terminal causes zero-byte file copies | Use semicolons to chain `cp` commands instead of `\` continuation |
 | Staging overwrites existing master table | Always re-run with KEGG API for production runs; use `--skip_kegg_api` only for testing |
 | `--staging_dir` copies 47-column table when `--skip_kegg_api` used | `kegg_pathway_names` column is empty but present; full 53-column table requires a complete run without `--skip_kegg_api` |
+| `gfas_gene_id` hardcoded in `parse_rbh.py` and `parse_tier4.py` | Fixed in v4: both helpers now use `f"{species.lower()}_gene_id"` dynamically |
+| `gfas_gene_id` hardcoded in R helper template | Fixed in v4: R helper now uses `{species.lower()}_gene_id` via f-string interpolation |
+| `SIGNALP_FASTA` unbound variable at submission time | Fixed in v4: escaped as `\${SIGNALP_FASTA}` in SignalP heredoc so it evaluates at job runtime |
+| RBH returns 0 hits for NCBI genomes (Acer, Ofav, Amur) | NCBI BLAST databases prefix subject IDs with `gb|accession|`; reverse hits use this format but forward queries use plain accession. Fixed in v4 `parse_rbh.py`: strip `gb|...|` wrapper from reverse subject IDs before matching (`s.split("|")[1] if s.count("|") >= 2 else s`) |
+| NCBI GFF3 coordinate parsing fails (Acer, Ofav, Amur) | NCBI GFF3 mRNA IDs use `gnl|WGS|...` format; protein FASTA IDs are KAK accessions. A combined gene-to-protein CSV must be built from both `acer_gene_to_protein.csv` and `acer_gene_to_protein2.csv` before running the merge. Pre-configured in `run_config.sh` for Acer. Adds `{species}_locus_tag` as column 2 in the master table. |
 
 ---
 
