@@ -144,13 +144,9 @@ coral-func-annotation-pipeline/
 │   ├── Amur/                            # Same structure as Gfas
 │   └── Nvec/                            # Same structure as Gfas
 │
-├── docs/
-│   ├── column_descriptions.md           # Full 53-column schema with types, examples, citations
-│   └── classification_system.md         # Tier logic, protein groups, CellChat roles, citations
-│
-└── examples/
-    ├── load_annotation.R                # Quick Seurat/tidyverse join example
-    └── load_annotation.py               # Quick pandas example
+└── docs/
+    ├── column_descriptions.md           # Full 53-column schema with types, examples, citations
+    └── classification_system.md         # Tier logic, protein groups, CellChat roles, citations
 ```
 
 ---
