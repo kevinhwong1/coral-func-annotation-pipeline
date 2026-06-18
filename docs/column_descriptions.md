@@ -19,7 +19,7 @@
 
 ---
 
-Master annotation table schema (53 columns; `protein_sequence` is excluded from the GitHub-hosted file, leaving 52 columns in the uploaded TSV).
+Master annotation table schema (53 columns).
 
 ---
 
@@ -168,7 +168,7 @@ Transmembrane topology predictions from **DeepTMHMM v1.0** ([DTU server](https:/
 | # | Column | Type | Description | Example |
 |---|--------|------|-------------|---------|
 | 39 | `protein_length_aa` | int | Protein length in amino acids | `512` |
-| 40 | `protein_sequence` | string | Full amino acid sequence (**excluded from GitHub-hosted file**) | `MPRSDTG...` |
+| 40 | `protein_sequence` | string | Full amino acid sequence | `MPRSDTG...` |
 
 ---
 

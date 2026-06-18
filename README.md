@@ -85,7 +85,7 @@ See [`pipeline/README.md`](pipeline/README.md) for full submission instructions,
 
 ## Output
 
-Each species produces a **master annotation table** (53 columns per gene; see [`docs/column_descriptions.md`](docs/column_descriptions.md) for the full schema) and a set of gene lists. The `protein_sequence` column is excluded from the GitHub-hosted TSV; sequences are available from the original proteome source (see genome sources above).
+Each species produces a **master annotation table** (53 columns per gene, including protein sequences; see [`docs/column_descriptions.md`](docs/column_descriptions.md) for the full schema) and a set of gene lists. The `protein_sequence` column (column 40) contains the full amino acid sequence for each gene model.
 
 See [`docs/classification_system.md`](docs/classification_system.md) for full classification logic.
 
@@ -112,7 +112,7 @@ coral-func-annotation-pipeline/
 ├── species/
 │   ├── Gfas/                            # Complete
 │   │   ├── Gfas_annotation_summary.md       # Results summary (tiers, groups, CellChat)
-│   │   ├── Gfas_master_annotation.tsv        # 52-column table (protein_sequence excluded)
+│   │   ├── Gfas_master_annotation.tsv        # 53-column table (includes protein_sequence)
 │   │   │                                     # See docs/column_descriptions.md for schema
 │   │   ├── intermediate/
 │   │   │   ├── eggnog_results.tsv
