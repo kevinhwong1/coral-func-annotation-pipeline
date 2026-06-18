@@ -24,4 +24,4 @@ df["go_list"] = df["all_go_terms"].str.split("|")
 
 # Join to Seurat metadata (example)
 # seurat_meta = pd.read_csv("seurat_metadata.csv", index_col=0)
-# merged = seurat_meta.join(df.set_index("gfas_gene_id"), on="gene_id")
+# merged = seurat_meta.join(df.set_index("{species}_gene_id"), on="gene_id")  # replace {species}

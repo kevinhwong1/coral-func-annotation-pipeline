@@ -175,27 +175,54 @@ Once all upstream jobs are complete, run the merge directly without BSUB. This i
 ```bash
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate annotation_env
+export LD_LIBRARY_PATH="/nethome/<user>/anaconda3/envs/annotation_env/lib:${LD_LIBRARY_PATH}"
 
-python3 pipeline/08_merge_annotate.py \
-    --species Gfas \
-    --run_dir /path/to/runs/Gfas_20260605 \
-    --proteome /path/to/gfas_1.0.proteins.fasta \
-    --gff3 /path/to/gfas_1.0.genes.gff3 \
-    --db_dir /path/to/databases \
-    --outdir /path/to/runs/Gfas_20260605/08_final
+RUN_DIR="/scratch/dark_genes/annotation_pipeline/runs/Gfas_20260605"
+
+python3 /scratch/dark_genes/annotation_pipeline/scripts/08_merge_annotate.py \
+    --species         Gfas \
+    --run_dir         "${RUN_DIR}" \
+    --proteome_fasta  /nethome/<user>/genomes/Gfas_v1/gfas_1.0.proteins.fasta \
+    --gff3            /nethome/<user>/genomes/Gfas_v1/gfas_1.0.genes.gff3 \
+    --eggnog          "${RUN_DIR}/01_eggnog/Gfas.emapper.annotations" \
+    --orthofinder     "${RUN_DIR}/02_orthofinder/Results_OrthoFinder/Results_Jun05" \
+    --interproscan    "${RUN_DIR}/03_interproscan/Gfas_interproscan.tsv" \
+    --rbh             "${RUN_DIR}/04_rbh_swissprot/Gfas_rbh_hits.tsv" \
+    --signalp         "${RUN_DIR}/05_signalp/prediction_results.txt" \
+    --tmhmm           "${RUN_DIR}/05_tmhmm/full/results/TMRs.gff3" \
+    --tier3           "${RUN_DIR}/06_tier3_hmmsearch/Gfas_tier3_domains.domtblout" \
+    --tier4           "${RUN_DIR}/07_tier4_blast/Gfas_tier4_blast.tsv" \
+    --out_table       "${RUN_DIR}/08_final/Gfas_master_annotation.tsv" \
+    --out_genelists   "${RUN_DIR}/08_final/gene_lists" \
+    --genome_version  "Gfas_v1.0" \
+    --proteome_source "http://gfas.reefgenomics.org/" \
+    --staging_dir     "/nethome/<user>/github_upload"
 ```
 
-Key flags:
+All arguments:
 
-| Flag | Description |
-|------|-------------|
-| `--species` | Species abbreviation (used to name output columns and files) |
-| `--run_dir` | Root of the species run directory |
-| `--proteome` | Path to the species protein FASTA |
-| `--gff3` | Path to the species GFF3 annotation file |
-| `--db_dir` | Path to the shared databases directory |
-| `--outdir` | Where to write the final TSV and gene lists |
-| `--skip_kegg_api` | Skip KEGG pathway name lookup (useful for fast test runs) |
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--species` | Yes | Species abbreviation (e.g. `Gfas`). Used to name output columns, files, and gene lists. |
+| `--run_dir` | Yes | Root of the species run directory. |
+| `--proteome_fasta` | No | Path to the species protein FASTA. Seeds the gene universe and computes protein lengths and sequences. |
+| `--gff3` | No | Path to the species GFF3 annotation file. Populates scaffold, coordinates, strand, and exon count columns. |
+| `--eggnog` | Yes | Path to eggNOG-mapper `.annotations` output file. |
+| `--orthofinder` | Yes | Path to OrthoFinder results directory (the `Results_<date>` subdirectory). |
+| `--interproscan` | Yes | Path to InterProScan TSV output file. |
+| `--rbh` | Yes | Path to RBH BLAST hits TSV. |
+| `--signalp` | Yes | Path to SignalP `prediction_results.txt`. |
+| `--tmhmm` | No | Path to merged DeepTMHMM `TMRs.gff3`. |
+| `--tier3` | Yes | Path to HMMER Tier 3 domtblout file. |
+| `--tier4` | Yes | Path to Tier 4 BLAST hits TSV. |
+| `--out_table` | Yes | Output path for master annotation TSV. |
+| `--out_genelists` | Yes | Output directory for gene lists. |
+| `--genome_version` | No | Genome version string written to the annotation summary (e.g. `Gfas_v1.0`). |
+| `--proteome_source` | No | Proteome source URL written to the annotation summary. |
+| `--staging_dir` | No | Root staging directory for GitHub upload (e.g. `/nethome/<user>/github_upload`). If provided, all outputs are copied and IPS is filtered automatically after the run completes. |
+| `--skip_kegg_api` | No | Skip KEGG REST API calls. Useful for testing; omit for production runs. |
+
+The script writes a run log to `08_final/{species}_merge_run.out` and generates an annotation summary MD at `08_final/{species}_annotation_summary.md` automatically. If `--staging_dir` is provided, all files are staged and the script prints the exact `scp` command to download locally.
 
 ### If DeepTMHMM chunks are incomplete
 
@@ -277,7 +304,9 @@ runs/<Species>_<YYYYMMDD>/
 ├── 07_tier4/                # DIAMOND Tier 4 hits
 ├── 08_final/                # Merge output
 │   ├── <Species>_master_annotation.tsv
+│   ├── <Species>_annotation_summary.md
 │   ├── <Species>_load_gene_lists.R
+│   ├── <Species>_merge_run.out
 │   └── gene_lists/
 └── py_helpers/              # Python helper scripts written at submission time
 ```
@@ -311,6 +340,9 @@ These issues were encountered during development and are fixed in the current sc
 | KEGG API 1,000-KO limit | Replaced with batch loop: 10 KOs/call, 0.2s sleep |
 | `gfas_gene_id` hardcoded in merge script | Now dynamic: `gene_id_col = f"{species.lower()}_gene_id"` |
 | `.repla('-','')` typo in pI/MW computation | Fixed to `.replace('-','')`. This bug silently returned None for all pI and MW values. |
+| Line continuation (`\`) in terminal causes zero-byte file copies | Use semicolons to chain `cp` commands instead of `\` continuation |
+| Staging overwrites existing master table | Always re-run with KEGG API for production runs; use `--skip_kegg_api` only for testing |
+| `--staging_dir` copies 47-column table when `--skip_kegg_api` used | `kegg_pathway_names` column is empty but present; full 53-column table requires a complete run without `--skip_kegg_api` |
 
 ---
 

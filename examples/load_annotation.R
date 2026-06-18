@@ -17,10 +17,10 @@ cat("Gold-tier ligands:", nrow(ligands), "\n")
 
 # Parse pipe-delimited GO terms into long format
 go_long <- ann %>%
-  select(gfas_gene_id, all_go_terms) %>%
+  select({species}_gene_id, all_go_terms) %>%  # replace {species} with your species code e.g. gfas
   separate_rows(all_go_terms, sep = "\\|") %>%
   filter(!is.na(all_go_terms))
 
 # Join to Seurat metadata (example)
 # seurat_meta <- FetchData(seurat_obj, vars = c("gene_id", "seurat_clusters"))
-# merged <- seurat_meta %>% left_join(ann, by = c("gene_id" = "gfas_gene_id"))
+# merged <- seurat_meta %>% left_join(ann, by = c("gene_id" = "{species}_gene_id"))  # replace {species}

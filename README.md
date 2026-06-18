@@ -1,324 +1,381 @@
-# coral-func-annotation-pipeline
+# Pipeline README
 
-A pipeline for functional annotation of coral proteomes. Each gene model is annotated with orthology assignments, domain architecture, signal peptide predictions, transmembrane topology, and functional classification. Outputs a single master annotation table per species for use in comparative genomics, single-cell RNA-seq, and cell communication analyses.
-
-Annotation status tiers (Light/Partial/Dark) follow the framework of [Stephens et al. 2026](#references).
+This document covers first-time setup, running the pipeline for a new species, job structure, DeepTMHMM chunking, and known issues. The pipeline is designed for LSF/BSUB HPC schedulers and was developed on the University of Miami Pegasus cluster.
 
 ---
 
 ## Contents
 
-- [Species](#species)
-- [Pipeline Overview](#pipeline-overview)
-- [Output](#output)
-- [Repository Structure](#repository-structure)
-- [Quick Start](#quick-start)
-- [Classification Summary](#classification-summary)
-- [Tool Versions](#tool-versions)
-- [Parameters](#parameters)
-- [Abbreviations](#abbreviations)
-- [References](#references)
-- [Citation](#citation)
-- [License](#license)
+- [Prerequisites](#prerequisites)
+- [First-Time Setup](#first-time-setup)
+- [Running the Pipeline for a New Species](#running-the-pipeline-for-a-new-species)
+- [Job Structure and Dependencies](#job-structure-and-dependencies)
+- [DeepTMHMM Chunking](#deeptmhmm-chunking)
+- [Restarting Jobs or Running the Merge Manually](#restarting-jobs-or-running-the-merge-manually)
+- [Conda Environments](#conda-environments)
+- [Run Directory Structure](#run-directory-structure)
+- [Known Issues and Fixes](#known-issues-and-fixes)
+- [Adapting to Other HPC Schedulers](#adapting-to-other-hpc-schedulers)
 
 ---
 
-## Species
+## Prerequisites
 
-### Genome Sources
+Before running the pipeline you will need:
 
-Proteome sequences are not hosted in this repository. Download from the sources below before running the pipeline. Proteomes marked with * must be downloaded manually and transferred to the cluster (direct wget is not available from the source).
-
-| Species | Abbrev | Source | Proteome file |
-|---------|--------|--------|---------------|
-| *Galaxea fascicularis* | Gfas | [gfas.reefgenomics.org](http://gfas.reefgenomics.org/) | `gfas_1.0.proteins.fasta` |
-| *Pocillopora damicornis* | Pdam | [pdam.reefgenomics.org](http://pdam.reefgenomics.org/) | `pdam_proteins.fasta` |
-| *Acropora millepora* | Amil | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Amil_long.pep.fasta) * | `Amil_long.pep.fasta` |
-| *Stylophora pistillata* | Spis | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Spis_long.pep.fasta) * | `Spis_long.pep.fasta` |
-| *Oculina patagonica* | Opat | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Ocupat_long.pep.fasta) * | `Ocupat_long.pep.fasta` |
-| *Acropora cervicornis* | Acer | [NCBI GCA_032359415.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_032359415.1/) | — |
-| *Orbicella faveolata* | Ofav | [NCBI GCA_042242905.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_042242905.1/) | — |
-| *Xenia* spp. | Xspp | [Carnegie Endosymbiosis](https://cmo.carnegiescience.edu/endosymbiosis/genome/) | `xenSp1.proteins.fa` |
-| *Acropora muricata* | Amur | [NCBI GCF_036669905.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_036669905.1/) | — |
-| *Nematostella vectensis* | Nvec | [SimrBase](https://simrbase.stowers.org/nematostella) | `NV2g.20240221.protein.fa` |
-
-> For NCBI genomes, download the predicted protein FASTA (`*_protein.faa`) using the NCBI Datasets CLI: `datasets download genome accession <GCA_ID> --include protein`. Proteomes from GitHub (Amil, Spis, Opat) must be downloaded via the GitHub interface or `git clone` and transferred to the cluster manually.
->
-> *Nematostella vectensis* (Nvec) is used as an outgroup in OrthoFinder and will be annotated in a future pipeline run.
-
-### Annotation Results
-
-| Species | Abbrev | n genes | Gold | Silver | Bronze | Informative | Unclassified | Light | Partial | Dark | Run date |
-|---------|--------|---------|------|--------|--------|-------------|--------------|-------|---------|------|----------|
-| *Galaxea fascicularis* | Gfas | 22,418 | 31.2% | 23.0% | 10.7% | 0.1% | 35.0% | 71.6% | 9.9% | 18.4% | 2026-06-05 |
-| *Pocillopora damicornis* | Pdam | 26,077 | | | | | | | | | in progress |
-| *Acropora millepora* | Amil | | | | | | | | | | planned |
-| *Stylophora pistillata* | Spis | | | | | | | | | | planned |
-| *Oculina patagonica* | Opat | | | | | | | | | | planned |
-| *Acropora cervicornis* | Acer | | | | | | | | | | planned |
-| *Orbicella faveolata* | Ofav | | | | | | | | | | planned |
-| *Xenia* spp. | Xspp | | | | | | | | | | planned |
-| *Acropora muricata* | Amur | | | | | | | | | | planned |
-| *Nematostella vectensis* | Nvec | | | | | | | | | | planned |
+1. **Anaconda3** installed in your home directory
+2. **SignalP 6.0** academic license tarball; request from https://services.healthtech.dtu.dk/services/SignalP-6.0/
+3. **DeepTMHMM academic license**; request from DTU BioLib (same portal as SignalP). Transfer `DeepTMHMM-Academic-License-v1.0.zip` to your home directory on the cluster
+4. **Java 11+**: required by InterProScan (check with `java -version`; load via `module load java/11` if needed)
+5. **Species proteome** (FASTA) and **GFF3** annotation file placed in a genomes directory
 
 ---
 
-## Pipeline Overview
+## First-Time Setup
 
-Eight jobs are submitted per species via LSF/BSUB. BSUB job scripts are generated at runtime by `submit_pipeline.sh` and written to the species run directory. They are not stored as standalone files.
-
-| Job | Tool | Purpose | Queue | Wall time |
-|-----|------|---------|-------|-----------|
-| 01 | eggNOG-mapper v2 | Orthology, GO, KEGG, COG | bigmem | 12 hr |
-| 02 | OrthoFinder v2 | Phylogenetic orthologs (human, mouse, *N. vectensis*) | bigmem | 120 hr |
-| 03 | InterProScan 5.78-109.0 | Domain annotation (17 databases) | bigmem | 48 hr |
-| 04 | DIAMOND v2.2.1 | Reciprocal best hits vs SwissProt | bigmem | 8 hr |
-| 05 | SignalP 6.0 | Signal peptide prediction | general | 20 hr |
-| 05b | DeepTMHMM 1.0 | Transmembrane topology (2,000-seq chunks) | general | 12 hr/chunk |
-| 06 | HMMER 3.4 | Tier 3 custom HMM profiles (179 profiles) | general | 6 hr |
-| 07 | DIAMOND v2.2.1 | Tier 4 curated coral BLAST (17 sequences) | general | 1 hr |
-| 08 | 08_merge_annotate.py | Merge all layers → master annotation table | general | 2 hr |
-
-See [`pipeline/README.md`](pipeline/README.md) for full submission instructions, configuration, and HPC notes.
-
----
-
-## Output
-
-Each species produces a **master annotation table** (53 columns per gene, including protein sequences; see [`docs/column_descriptions.md`](docs/column_descriptions.md) for the full schema) and a set of gene lists. The `protein_sequence` column (column 40) contains the full amino acid sequence for each gene model.
-
-See [`docs/classification_system.md`](docs/classification_system.md) for full classification logic.
-
----
-
-## Repository Structure
-
-```
-coral-func-annotation-pipeline/
-│
-├── README.md                            # This file
-├── LICENSE
-│
-├── pipeline/
-│   ├── README.md                        # Submission instructions, HPC notes, job config
-│   ├── 00_setup_annotation_env.sh       # One-time environment and database setup
-│   ├── submit_pipeline.sh               # Master job submission script (generates BSUB scripts)
-│   ├── run_config.sh                    # Species paths and pipeline variables
-│   └── 08_merge_annotate.py             # Merge and classification script (~1,700 lines)
-│
-├── databases/
-│   └── README.md                        # Database names, versions, download sources
-│
-├── species/
-│   ├── Gfas/                            # Complete
-│   │   ├── Gfas_annotation_summary.md       # Results summary (tiers, groups, CellChat)
-│   │   ├── Gfas_master_annotation.tsv        # 53-column table (includes protein_sequence)
-│   │   │                                     # See docs/column_descriptions.md for schema
-│   │   ├── intermediate/
-│   │   │   ├── eggnog_results.tsv
-│   │   │   ├── interproscan_results.tsv
-│   │   │   ├── rbh_swissprot.tsv
-│   │   │   ├── signalp_summary.tsv
-│   │   │   ├── tier3_hmm_hits.tsv
-│   │   │   ├── tier4_blast_hits.tsv
-│   │   │   ├── deeptmhmm_merged.gff3
-│   │   │   └── orthofinder/
-│   │   │       ├── Orthogroups.tsv
-│   │   │       ├── Statistics_Overall.tsv
-│   │   │       └── Orthologues/
-│   │   └── gene_lists/
-│   │       ├── Light_genes.txt
-│   │       ├── Partial_genes.txt
-│   │       ├── Dark_genes.txt
-│   │       ├── CellChat_Ligand.txt
-│   │       ├── CellChat_Receptor.txt
-│   │       ├── CellChat_Receptor_candidate.txt
-│   │       └── by_protein_group/        # One .txt file per functional group
-│   ├── Pdam/                            # Same structure as Gfas
-│   ├── Amil/                            # Same structure as Gfas
-│   ├── Spis/                            # Same structure as Gfas
-│   ├── Opat/                            # Same structure as Gfas
-│   ├── Acer/                            # Same structure as Gfas
-│   ├── Ofav/                            # Same structure as Gfas
-│   ├── Xspp/                            # Same structure as Gfas
-│   ├── Amur/                            # Same structure as Gfas
-│   └── Nvec/                            # Same structure as Gfas
-│
-├── docs/
-│   ├── column_descriptions.md           # Full 53-column schema with types, examples, citations
-│   └── classification_system.md         # Tier logic, protein groups, CellChat roles, citations
-│
-└── examples/
-    ├── load_annotation.R                # Quick Seurat/tidyverse join example
-    └── load_annotation.py               # Quick pandas example
-```
-
----
-
-## Quick Start
+Run the setup script **once** on the login node before any species run. It creates both conda environments, installs all tools, downloads databases, and validates the installation. Takes 2–4 hours depending on network speed (eggNOG database is ~39 GB).
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/kevinhwong1/coral-func-annotation-pipeline.git
-cd coral-func-annotation-pipeline
-
-# 2. One-time environment and database setup
-# See pipeline/README.md for prerequisites (SignalP license, DeepTMHMM academic license)
 bash pipeline/00_setup_annotation_env.sh
-
-# 3. Configure your species run
-# Edit the paths at the top of run_config.sh for your species proteome and GFF3
-cp pipeline/run_config.sh my_run_config.sh
-
-# 4. Submit pipeline (LSF/BSUB)
-bash pipeline/submit_pipeline.sh <SPECIES>
-# e.g. bash pipeline/submit_pipeline.sh Pdam
 ```
 
-See [`pipeline/README.md`](pipeline/README.md) for detailed instructions including database setup, DeepTMHMM chunking, known issues, and HPC queue configuration.
+This script:
+- Creates `annotation_env` (Python 3.11, all annotation tools)
+- Creates `orthofinder_env` (OrthoFinder, MAFFT, FastTree; kept separate from annotation_env)
+- Downloads and indexes UniProt SwissProt
+- Extracts human and mouse SwissProt subsets for OrthoFinder
+- Downloads and installs InterProScan 5.78-109.0
+- Downloads eggNOG 5.0 database
+- Installs SignalP 6.0 and DeepTMHMM from license tarballs
+- Presses the Tier 3 HMM and Tier 4 BLAST databases
+- Runs a validation check on all tools and databases
+
+> **Note:** The *Nematostella vectensis* proteome (NV2g.20240221.protein.fa) must be downloaded manually from https://simrbase.stowers.org/nematostella and placed in your genomes directory before running OrthoFinder.
 
 ---
 
-## Classification Summary
+## Running the Pipeline for a New Species
 
-Genes are classified along four independent axes. Full logic is in [`docs/classification_system.md`](docs/classification_system.md).
+### 1. Activate the environment
 
-**Confidence tier**: evidence strength from orthology and homology sources.
-`Gold` > `Silver` > `Bronze` > `Informative` > `Unclassified`
+```bash
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate annotation_env
+```
 
-**Annotation status**: functional characterisation in public databases, following Stephens et al. 2026.
-`Light` (named ortholog or description) | `Partial` (domain only) | `Dark` (no evidence)
+### 2. Submit all jobs
 
-**Protein group**: 24 functional groups for use in Seurat and CellChat analyses.
+All 10 project species are pre-configured in `run_config.sh` with proteome paths, GFF3, genome version, and source URL. Submit with just the species code:
 
-**CellChat role**: `Ligand`, `Receptor`, `Receptor_candidate`, or `Neither`.
+```bash
+bash /scratch/dark_genes/annotation_pipeline/scripts/submit_pipeline.sh Acer
+```
 
----
+For a species not in `run_config.sh`, pass paths directly as flags — no config file edits required:
 
-## Tool Versions
+```bash
+bash /scratch/dark_genes/annotation_pipeline/scripts/submit_pipeline.sh MySpecies \
+    --proteome        /path/to/proteome.fasta \
+    --gff3            /path/to/annotation.gff3 \
+    --genome_version  "MySpecies_v1.0" \
+    --proteome_source "https://source.url/" \
+    --staging_dir     "/nethome/kxw755/github_upload"
+```
 
-| Tool | Version | Publication |
-|------|---------|-------------|
-| eggNOG-mapper | v2 | [Cantalapiedra et al. 2021](https://doi.org/10.1093/molbev/msab293) |
-| OrthoFinder | v2 | [Emms & Kelly 2019](https://doi.org/10.1186/s13059-019-1832-y) |
-| InterProScan | 5.78-109.0 | [Jones et al. 2014](https://doi.org/10.1093/bioinformatics/btu031) |
-| DIAMOND | v2.2.1 | [Buchfink et al. 2021](https://doi.org/10.1038/s41592-021-01101-x) |
-| SignalP | 6.0 | [Teufel et al. 2022](https://doi.org/10.1038/s41587-021-01156-3) |
-| DeepTMHMM | 1.0 | [Hallgren et al. 2022](https://doi.org/10.1101/2022.04.08.487609) |
-| HMMER | 3.4 | [Eddy 2011](https://doi.org/10.1371/journal.pcbi.1002195) |
-| BioPython | v1.87 | [Cock et al. 2009](https://doi.org/10.1093/bioinformatics/btp163) |
+Flags override `run_config.sh` defaults when provided, so they can also be used to temporarily override a pre-configured path without editing the config file.
 
----
+`submit_pipeline.sh` generates all BSUB scripts, submits them with LSF dependencies, and writes job scripts to `${RUN_DIR}/logs/` at submission time. The run directory is created automatically as `${BASE}/runs/${SPECIES}_$(date +%Y%m%d)`.
 
-## Parameters
+### 3. Monitor jobs
 
-Parameters for each annotation step. Tools were run with default parameters unless otherwise noted.
-
-| Step | Tool | Parameters |
-|------|------|------------|
-| eggNOG orthology | eggNOG-mapper v2 | Default sensitivity (`--sensmode default`); eggNOG 5.0 database |
-| Ortholog inference | OrthoFinder v2 | MSA mode (`-M msa`); 4 species: coral, human, mouse, *N. vectensis* |
-| Domain annotation | InterProScan 5.78-109.0 | Per-database cutoffs as distributed (Pfam uses GA bit-score thresholds; PANTHER e-value ≤ 1e-3; other databases use database-specific defaults). No user-level e-value filter applied. |
-| RBH vs SwissProt | BLAST+ blastp | e-value ≤ 1e-5; `-max_target_seqs 1` (applied in both directions independently) |
-| Signal peptide | SignalP 6.0 | `--mode slow-sequential`; `--organism eukarya`; classification threshold set by model output (no user-adjustable cutoff) |
-| TM topology | DeepTMHMM 1.0 | Default model parameters; proteomes split into 2,000-sequence chunks; CPU inference |
-| Tier 3 HMM | HMMER 3.4 hmmsearch | `-E 1e-3 --domE 1e-3`; 179 custom coral/metazoan HMM profiles |
-| Tier 4 BLAST | BLAST+ blastp | e-value ≤ 1e-5; `-max_target_seqs 5`; 17 curated coral reference sequences |
-| pI and MW | BioPython v1.87 ProteinAnalysis | Lehninger pKa scale (default) |
-| KEGG pathway names | KEGG REST API | Batch retrieval; 10 KOs per call; 0.2s interval between calls |
-
-### Classification thresholds
-
-| Classification | Threshold / rule |
-|---------------|-----------------|
-| Gold tier | OrthoFinder ortholog **AND** RBH SwissProt hit (both required) |
-| Silver tier | OrthoFinder ortholog **OR** RBH SwissProt hit |
-| Bronze tier | Tier 3 HMM hit **OR** informative eggNOG keyword **OR** IPS Pfam hit |
-| CellChat Ligand | SignalP class = SP **AND** tmhmm_n_tmrs = 0 |
-| CellChat Receptor | In receptor group **OR** (SP + tmhmm_n_tmrs ≥ 1) |
-| CellChat Receptor_candidate | tmhmm_n_tmrs ≥ 1, not in known receptor group |
-
-See [`docs/classification_system.md`](docs/classification_system.md) for full classification logic and protein group definitions.
-
+```bash
+bjobs -u kxw755 | grep <SPECIES>  # jobs for this species
+bjobs -l <JID>                    # detail for one job
+bpeek <JID>                       # live stdout
+cat ${RUN_DIR}/logs/*.out         # completed job logs
+```
 
 ---
 
-## Abbreviations
+## Job Structure and Dependencies
 
-| Abbreviation | Definition |
-|--------------|-----------|
-| AMP | Antimicrobial peptide |
-| BLAST | Basic Local Alignment Search Tool |
-| BSUB | Batch submission command for the LSF scheduler |
-| COG | Clusters of Orthologous Groups |
-| DBD | DNA-binding domain |
-| ECM | Extracellular matrix |
-| ESM | Evolutionary Scale Modeling (protein language model used by DeepTMHMM) |
-| GFF3 | General Feature Format version 3 |
-| GMP | Granulocyte-mast cell precursor |
-| GO | Gene Ontology |
-| GPCR | G protein-coupled receptor |
-| HMM | Hidden Markov Model |
-| HPC | High-performance computing cluster |
-| HSC | Haematopoietic stem cell |
-| HSP | Heat shock protein |
-| IPS | InterProScan |
-| JID | Job identifier assigned by the LSF scheduler |
-| KEGG | Kyoto Encyclopedia of Genes and Genomes |
-| KO | KEGG Orthology identifier |
-| LSF | Load Sharing Facility (HPC job scheduler) |
-| MACPF | Membrane attack complex/perforin domain |
-| MSA | Multiple sequence alignment |
-| MW | Molecular weight (reported in kDa) |
-| NLR | NOD-like receptor |
-| OAS | Oligoadenylate synthase |
-| OG | Orthogroup (as defined by OrthoFinder) |
-| OOM | Out of memory |
-| pI | Isoelectric point |
-| PRR | Pattern recognition receptor |
-| RBH | Reciprocal Best Hit |
-| SCRiP | Short Cysteine-Rich Protein (coral-specific venom/defence protein family) |
-| SOMP | Skeletal Organic Matrix Protein (coral calcification-associated) |
-| SP | Signal peptide (as classified by SignalP 6.0) |
-| SRCR | Scavenger receptor cysteine-rich domain |
-| STING | Stimulator of Interferon Genes |
-| TF | Transcription factor |
-| TGF | Transforming growth factor |
-| TLR | Toll-like receptor |
-| TM | Transmembrane |
-| TRAF | TNF receptor-associated factor |
-| TRIM | Tripartite motif protein |
-| TSV | Tab-separated values |
+The pipeline runs in three phases. Phase 1 jobs are all submitted at once and run in parallel. Phase 2 requires a manual merge step for DeepTMHMM chunks. Phase 3 fires automatically once all upstream jobs are complete.
+
+<img src="pipeline_job_flow.png" alt="Pipeline job flow diagram showing three phases: parallel job submission, manual DeepTMHMM merge, and automated final merge" width="100%">
+
+
+| Group | Jobs | Queue | Parallel? |
+|-------|------|-------|-----------|
+| Bigmem | 01 eggNOG, 02 OrthoFinder, 03 InterProScan, 04 RBH BLAST | bigmem | Yes |
+| General | 05 SignalP, 06 Tier 3 HMM, 07 Tier 4 BLAST | general | Yes |
+| After SignalP | 05b DeepTMHMM (one job per 2,000-seq chunk) | general | Chunks parallel |
+
+**Phase 2** requires manually merging DeepTMHMM chunk GFF3 files (see DeepTMHMM Chunking below). This step cannot be automated because chunks may fail and require individual resubmission.
+
+**Phase 3**: Job 08 (`merge_annotate.py`) has `done(JID)` dependencies on all upstream jobs and fires automatically once they are all complete.
+
+---
+
+## DeepTMHMM Chunking
+
+DeepTMHMM loads a 2.6 GB ESM protein language model and cannot run on login nodes (OOM-killed). It must be submitted as a compute job. For large proteomes (>2,000 sequences), the proteome is automatically split into 2,000-sequence chunks by `submit_pipeline.sh`, with one BSUB job per chunk.
+
+**Wall time: 12 hours per chunk.** Do not reduce to 6 hours; 2,000 sequences requires approximately 9 hours.
+
+After all chunks complete, the output GFF3 files must be merged before submitting job 08:
+
+```bash
+TMHMM_DIR="${RUN_DIR}/05_tmhmm"
+
+# 1. Check all chunks completed
+for i in $(seq -w 1 14); do
+    [[ -f "${TMHMM_DIR}/results/chunk_${i}/TMRs.gff3" ]] \
+        && echo "chunk_${i}: OK" \
+        || echo "chunk_${i}: MISSING"
+done
+
+# 2. Merge chunk GFF3 files
+echo "##gff-version 3" > "${TMHMM_DIR}/TMRs.gff3"
+for d in "${TMHMM_DIR}/results"/chunk_*/; do
+    grep -v "^##gff-version" "${d}/TMRs.gff3" >> "${TMHMM_DIR}/TMRs.gff3"
+done
+
+# 3. Submit merge job
+bsub < "${RUN_DIR}/logs/job_08_merge.bsub"
+```
+
+> **Note:** The merge job BSUB script is generated at submission time with dependency JIDs that may be stale if you are resubmitting manually. It will start immediately when submitted directly with `bsub <`.
+
+---
+
+## Restarting Jobs or Running the Merge Manually
+
+If a job fails mid-pipeline or you need to resubmit the merge after manually completing DeepTMHMM chunks, follow these steps.
+
+### Checking job status
+
+```bash
+bjobs                            # all your running/pending jobs
+bjobs -l <JID>                   # detail for a specific job
+cat ${RUN_DIR}/logs/*.out        # output logs for completed jobs
+ls ${RUN_DIR}/logs/*.out         # list all log files
+```
+
+### Resubmitting a single failed job
+
+BSUB scripts are written to `${RUN_DIR}/logs/` at submission time. Resubmit any individual job directly:
+
+```bash
+bsub < ${RUN_DIR}/logs/job_03_interproscan.bsub
+```
+
+Note: the resubmitted job will have new JID dependencies. If job 08 was already submitted with the old JIDs, kill it and resubmit after the failed job completes.
+
+### Running the merge script manually
+
+Once all upstream jobs are complete, run the merge directly without BSUB. This is useful for testing or when the auto-dependency has failed:
+
+```bash
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate annotation_env
+export LD_LIBRARY_PATH="/nethome/<user>/anaconda3/envs/annotation_env/lib:${LD_LIBRARY_PATH}"
+
+RUN_DIR="/scratch/dark_genes/annotation_pipeline/runs/Gfas_20260605"
+
+python3 /scratch/dark_genes/annotation_pipeline/scripts/08_merge_annotate.py \
+    --species         Gfas \
+    --run_dir         "${RUN_DIR}" \
+    --proteome_fasta  /nethome/<user>/genomes/Gfas_v1/gfas_1.0.proteins.fasta \
+    --gff3            /nethome/<user>/genomes/Gfas_v1/gfas_1.0.genes.gff3 \
+    --eggnog          "${RUN_DIR}/01_eggnog/Gfas.emapper.annotations" \
+    --orthofinder     "${RUN_DIR}/02_orthofinder/Results_OrthoFinder/Results_Jun05" \
+    --interproscan    "${RUN_DIR}/03_interproscan/Gfas_interproscan.tsv" \
+    --rbh             "${RUN_DIR}/04_rbh_swissprot/Gfas_rbh_hits.tsv" \
+    --signalp         "${RUN_DIR}/05_signalp/prediction_results.txt" \
+    --tmhmm           "${RUN_DIR}/05_tmhmm/full/results/TMRs.gff3" \
+    --tier3           "${RUN_DIR}/06_tier3_hmmsearch/Gfas_tier3_domains.domtblout" \
+    --tier4           "${RUN_DIR}/07_tier4_blast/Gfas_tier4_blast.tsv" \
+    --out_table       "${RUN_DIR}/08_final/Gfas_master_annotation.tsv" \
+    --out_genelists   "${RUN_DIR}/08_final/gene_lists" \
+    --genome_version  "Gfas_v1.0" \
+    --proteome_source "http://gfas.reefgenomics.org/" \
+    --staging_dir     "/nethome/<user>/github_upload"
+```
+
+All arguments:
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--species` | Yes | Species abbreviation (e.g. `Gfas`). Used to name output columns, files, and gene lists. |
+| `--run_dir` | Yes | Root of the species run directory. |
+| `--proteome_fasta` | No | Path to the species protein FASTA. Seeds the gene universe and computes protein lengths and sequences. |
+| `--gff3` | No | Path to the species GFF3 annotation file. Populates scaffold, coordinates, strand, and exon count columns. |
+| `--eggnog` | Yes | Path to eggNOG-mapper `.annotations` output file. |
+| `--orthofinder` | Yes | Path to OrthoFinder results directory (the `Results_<date>` subdirectory). |
+| `--interproscan` | Yes | Path to InterProScan TSV output file. |
+| `--rbh` | Yes | Path to RBH BLAST hits TSV. |
+| `--signalp` | Yes | Path to SignalP `prediction_results.txt`. |
+| `--tmhmm` | No | Path to merged DeepTMHMM `TMRs.gff3`. |
+| `--tier3` | Yes | Path to HMMER Tier 3 domtblout file. |
+| `--tier4` | Yes | Path to Tier 4 BLAST hits TSV. |
+| `--out_table` | Yes | Output path for master annotation TSV. |
+| `--out_genelists` | Yes | Output directory for gene lists. |
+| `--genome_version` | No | Genome version string written to the annotation summary (e.g. `Gfas_v1.0`). |
+| `--proteome_source` | No | Proteome source URL written to the annotation summary. |
+| `--staging_dir` | No | Root staging directory for GitHub upload (e.g. `/nethome/<user>/github_upload`). If provided, all outputs are copied and IPS is filtered automatically after the run completes. |
+| `--skip_kegg_api` | No | Skip KEGG REST API calls. Useful for testing; omit for production runs. |
+
+The script writes a run log to `08_final/{species}_merge_run.out` and generates an annotation summary MD at `08_final/{species}_annotation_summary.md` automatically. If `--staging_dir` is provided, all files are staged and the script prints the exact `scp` command to download locally.
+
+### If DeepTMHMM chunks are incomplete
+
+Check which chunks finished and resubmit only the missing ones:
+
+```bash
+TMHMM_DIR="${RUN_DIR}/05_tmhmm"
+TOTAL_CHUNKS=14   # adjust for your species
+
+for i in $(seq -w 1 ${TOTAL_CHUNKS}); do
+    if [[ ! -f "${TMHMM_DIR}/results/chunk_${i}/TMRs.gff3" ]]; then
+        echo "chunk_${i}: MISSING - resubmitting"
+        bsub < "${RUN_DIR}/logs/job_05b_chunk_${i}.bsub"
+    else
+        echo "chunk_${i}: OK"
+    fi
+done
+```
+
+Then once all chunks are confirmed complete, merge and submit job 08:
+
+```bash
+# Merge chunk GFF3 files
+echo "##gff-version 3" > "${TMHMM_DIR}/TMRs.gff3"
+for d in "${TMHMM_DIR}/results"/chunk_*/; do
+    grep -v "^##gff-version" "${d}/TMRs.gff3" >> "${TMHMM_DIR}/TMRs.gff3"
+done
+echo "Merged: $(grep -vc '^#' ${TMHMM_DIR}/TMRs.gff3) protein topology records"
+
+# Resubmit merge; stale JID dependencies will not block it (fires immediately)
+bsub < "${RUN_DIR}/logs/job_08_merge.bsub"
+```
 
 
 ---
 
-## References
+## Conda Environments
 
-- Stephens TJ, et al. Widespread dark gene evolution in stony corals. *Genome Biol Evol.* 2026;18(4):evag072. https://doi.org/10.1093/gbe/evag072
-- Levy S, et al. A single-cell atlas of the coral *Stylophora pistillata*. *Cell.* 2021;184(10):2454–2468. https://doi.org/10.1016/j.cell.2021.04.005
-- Helgoe J, et al. Cnidarian innate immunity. *Biol Rev.* 2024. https://doi.org/10.1111/brv.13077
-- Lian et al. Coral symbiosis gene regulation. *Sci Adv.* 2025.
-- Quigley et al. Coral calcification mechanisms. *Sci Adv.* 2025.
+Two environments are required and must be kept separate:
 
----
+```bash
+# Main annotation environment (all jobs except OrthoFinder)
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate annotation_env
+# Contains: eggNOG-mapper, DIAMOND v2.2.1, HMMER 3.4, BLAST+,
+#           SignalP 6.0, BioPython v1.87, pandas, numpy (<2.0),
+#           fair-esm==0.4.0, h5py, PeptideBuilder, matplotlib
 
-## Citation
+# OrthoFinder environment (job 02 only)
+conda activate orthofinder_env
+# Contains: OrthoFinder v2, MAFFT, FastTree
+# DO NOT mix with annotation_env
+```
 
-If you use this pipeline or the annotation data, please cite:
-
-> Wong K. (2026). coral-func-annotation-pipeline. GitHub. https://github.com/kevinhwong1/coral-func-annotation-pipeline
-
-and the framework paper:
-
-> Stephens TJ, et al. Widespread dark gene evolution in stony corals. *Genome Biol Evol.* 2026;18(4):evag072. https://doi.org/10.1093/gbe/evag072
-
-and the individual tool publications listed in the Tool Versions table above.
+`EGGNOG_DATA_DIR` and `LD_LIBRARY_PATH` are set automatically via a conda activation hook installed at `$CONDA_PREFIX/etc/conda/activate.d/eggnog.sh`.
 
 ---
 
-## License
+## Adding a New Species to `run_config.sh`
 
-Pipeline scripts: GPL-3.0
-Annotation data: CC-BY 4.0
-See `LICENSE` for details.
+New species can be run without editing `run_config.sh` by passing paths as flags (see above). To permanently add a species, add a case block to the `configure_species()` function in `run_config.sh`:
+
+```bash
+MySpecies)
+    export QUERY_PROTEOME="${PROTEOME_ARG:-${NETHOME}/genomes/MySpecies/proteome.fasta}"
+    export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/MySpecies/annotation.gff3}"
+    export GENOME_VERSION="${GENOME_VERSION:-MySpecies_v1.0}"
+    export PROTEOME_SOURCE="${PROTEOME_SOURCE:-https://source.url/}"
+    ;;
+```
+
+All four variables are optional — if not set, they default to empty strings and the merge script handles them gracefully.
+
+---
+
+## Run Directory Structure
+
+Each species run creates the following directory structure:
+
+```
+runs/<Species>_<YYYYMMDD>/
+├── logs/                    # BSUB job scripts and output logs
+│   ├── job_01_eggnog.bsub
+│   ├── job_01_eggnog_<JID>.out
+│   └── ...
+├── 01_eggnog/               # eggNOG-mapper output
+├── 02_orthofinder/          # OrthoFinder output
+├── 03_interproscan/         # InterProScan TSV output
+├── 04_rbh/                  # DIAMOND RBH results
+├── 05_signalp/              # SignalP predictions
+├── 05_tmhmm/                # DeepTMHMM output (chunks + merged GFF3)
+│   └── results/
+│       ├── chunk_01/
+│       └── ...
+├── 06_tier3/                # HMMER Tier 3 hits
+├── 07_tier4/                # DIAMOND Tier 4 hits
+├── 08_final/                # Merge output
+│   ├── <Species>_master_annotation.tsv
+│   ├── <Species>_annotation_summary.md
+│   ├── <Species>_load_gene_lists.R
+│   ├── <Species>_merge_run.out
+│   └── gene_lists/
+└── py_helpers/              # Python helper scripts written at submission time
+```
+
+---
+
+## Known Issues and Fixes
+
+These issues were encountered during development and are fixed in the current scripts. Documented here to avoid reintroduction.
+
+| Issue | Fix |
+|-------|-----|
+| `conda activate` reading species name as env name | Use `source ~/anaconda3/etc/profile.d/conda.sh` not `bin/activate`; hardcode env names |
+| `${CONDA_ENV_ANNOT}` empty inside heredocs | All `conda activate` calls in BSUB heredocs use hardcoded strings |
+| JID parsing captured extra output, breaking dependencies | `submit_job()` sends log line to stderr; only bare JID printed to stdout |
+| InterProScan version mismatch | Use `interproscan-5.78-109.0` (not 5.71-103.0) |
+| SignalP 6.0 not found in PATH | Script now checks for `signalp6` and exits gracefully if missing |
+| Python heredocs caused quoting issues | Python parsers written as standalone files to `py_helpers/` |
+| `run_config.sh` auto-called `configure_species` unconditionally | Now only calls if `$1` is non-empty |
+| DeepTMHMM crashes if output dir exists | `rm -rf ${CHUNK_OUT}` added before each `predict.py` call |
+| DeepTMHMM model files not found | Must `cd` to install directory before running `predict.py` |
+| DeepTMHMM wall time exceeded at 6hr | Wall time changed to 12hr per chunk |
+| SignalP OSError on long FASTA headers | Headers stripped to first word before running (required for Pdam; long headers cause OSError in SignalP) |
+| `fair-esm` version 2.0.0 breaks `predict.py` | Pin to `fair-esm==0.4.0` |
+| `numpy` 2.x breaks SignalP and fair-esm | Pin to `numpy<2.0` |
+| matplotlib seaborn style string deprecated | `predict.py` line ~308 patched: `seaborn-whitegrid` → `seaborn-v0_8-whitegrid` |
+| DeepTMHMM OOM-killed on login node | Must run as compute job; login node cannot load the 2.6 GB ESM model |
+| `tmhmm_n_tmrs` column stored as float | `.fillna(0).astype(int)` applied after merge |
+| eggNOG column mapping wrong | GO=col9, COG=col6, KEGG_Pathway=col12, PFAMs=col20 |
+| IPS/SignalP column collision | IPS must not create `signalp_prediction` or `tmhmm_topology` columns |
+| KEGG API 1,000-KO limit | Replaced with batch loop: 10 KOs/call, 0.2s sleep |
+| `gfas_gene_id` hardcoded in merge script | Now dynamic: `gene_id_col = f"{species.lower()}_gene_id"` |
+| `.repla('-','')` typo in pI/MW computation | Fixed to `.replace('-','')`. This bug silently returned None for all pI and MW values. |
+| Line continuation (`\`) in terminal causes zero-byte file copies | Use semicolons to chain `cp` commands instead of `\` continuation |
+| Staging overwrites existing master table | Always re-run with KEGG API for production runs; use `--skip_kegg_api` only for testing |
+| `--staging_dir` copies 47-column table when `--skip_kegg_api` used | `kegg_pathway_names` column is empty but present; full 53-column table requires a complete run without `--skip_kegg_api` |
+| `gfas_gene_id` hardcoded in `parse_rbh.py` and `parse_tier4.py` | Fixed in v4: both helpers now use `f"{species.lower()}_gene_id"` dynamically |
+| `gfas_gene_id` hardcoded in R helper template | Fixed in v4: R helper now uses `{species.lower()}_gene_id` via f-string interpolation |
+| `SIGNALP_FASTA` unbound variable at submission time | Fixed in v4: escaped as `\${SIGNALP_FASTA}` in SignalP heredoc so it evaluates at job runtime |
+
+---
+
+## Adapting to Other HPC Schedulers
+
+The pipeline uses LSF/BSUB. To adapt to SLURM or PBS, the following need updating in `submit_pipeline.sh`:
+
+- `bsub <` → `sbatch` (SLURM) or `qsub` (PBS)
+- `#BSUB` directives → `#SBATCH` or `#PBS`
+- `done(JID)` dependency syntax → `--dependency=afterok:<JID>` (SLURM)
+- `bjobs` / `bpeek` → `squeue` / `sattach` (SLURM)
+
+All analysis commands inside the job scripts are scheduler-agnostic.
