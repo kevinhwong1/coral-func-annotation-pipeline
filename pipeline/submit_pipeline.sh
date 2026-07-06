@@ -122,7 +122,7 @@ fi
 echo ""
 echo "--- Generating gene-to-protein mapping ---"
 GENE_TO_PROTEIN_CSV="${RUN_DIR}/${SPECIES}_gene_to_protein.csv"
-python3 << 'PYEOF'
+python3 - << PYEOF
 import re, csv
 fasta = "${QUERY_PROTEOME}"
 out   = "${GENE_TO_PROTEIN_CSV}"
@@ -135,8 +135,6 @@ with open(fasta) as f:
         parts = line.split()
         gene_id = parts[0]
         desc = ' '.join(parts[1:])
-        # Extract locus tag from NCBI headers (e.g. P5673_033792)
-        # For non-NCBI species, locus_tag = gene_id (self-mapping)
         match = re.search(r'\b([A-Z][A-Z0-9]+_\d{4,})\b', desc)
         locus_tag = match.group(1) if match else gene_id
         rows.append((gene_id, locus_tag))
@@ -144,7 +142,8 @@ with open(out, 'w', newline='') as f:
     w = csv.writer(f)
     w.writerow(['gene_id', 'protein_id'])
     w.writerows(rows)
-print(f"  Written: {out} ({len(rows)} entries)")
+n = len(rows)
+print(f"  Written: {out} ({n} entries)")
 PYEOF
 # Only use auto-generated CSV if no pre-configured path exists
 [[ -z "${GENE_TO_PROTEIN}" ]] && export GENE_TO_PROTEIN="${GENE_TO_PROTEIN_CSV}"
@@ -266,7 +265,7 @@ cat > "${LOG_DIR}/job_02_orthofinder.bsub" << BSUB
 #BSUB -P ${LSF_PROJECT}
 #BSUB -n 16
 #BSUB -W 120:00
-#BSUB -R "rusage[mem=15000]"
+#BSUB -R "rusage[mem=15000] select[hname==gpu1 || hname==gpu2]"
 #BSUB -o ${LOG_DIR}/02_orthofinder_%J.out
 #BSUB -e ${LOG_DIR}/02_orthofinder_%J.err
 #BSUB -u ${EMAIL}
@@ -433,7 +432,7 @@ for i in $(seq -w 1 "${N_CHUNKS}"); do
 #BSUB -q general
 #BSUB -P ${LSF_PROJECT}
 #BSUB -n 4
-#BSUB -W 12:00
+#BSUB -W 16:00
 #BSUB -R "rusage[mem=16000]"
 #BSUB -o ${LOG_DIR}/05b_tmhmm_${i}_%J.out
 #BSUB -e ${LOG_DIR}/05b_tmhmm_${i}_%J.err

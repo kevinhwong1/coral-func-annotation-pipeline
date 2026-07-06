@@ -102,14 +102,13 @@ configure_species() {
             export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/GCA_032359415.1_Acer/genomic.gff}"
             export GENOME_VERSION="${GENOME_VERSION:-GCA_032359415.1}"
             export PROTEOME_SOURCE="${PROTEOME_SOURCE:-https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_032359415.1/}"
-            export GENE_TO_PROTEIN="${GENE_TO_PROTEIN:-${NETHOME}/genomes/GCA_032359415.1_Acer/acer_gene_to_protein.csv}"
+            export GENE_TO_PROTEIN="${GENE_TO_PROTEIN:-${NETHOME}/genomes/GCA_032359415.1_Acer/acer_gene_to_protein_combined.csv}"
             ;;
         Ofav)
-            export QUERY_PROTEOME="${PROTEOME_ARG:-${NETHOME}/genomes/GCA_042242905.1_Ofav/ofav_protein.faa}"
-            export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/GCA_042242905.1_Ofav/genomic.gff}"
-            export GENOME_VERSION="${GENOME_VERSION:-GCA_042242905.1}"
-            export PROTEOME_SOURCE="${PROTEOME_SOURCE:-https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_042242905.1/}"
-            export GENE_TO_PROTEIN="${GENE_TO_PROTEIN:-${NETHOME}/genomes/GCA_042242905.1_Ofav/ofav_gene_to_protein.csv}"
+            export QUERY_PROTEOME="${PROTEOME_ARG:-${NETHOME}/genomes/longreads_um_ofav_complete/Orbicella_faveolata_gen_17.proteins.fa}"
+            export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/longreads_um_ofav_complete/Orbicella_faveolata_gen_17.gff3}"
+            export GENOME_VERSION="${GENOME_VERSION:-Ofav_gen_17}"
+            export PROTEOME_SOURCE="${PROTEOME_SOURCE:-University of Miami long-read assembly (internal)}"
             ;;
         Amur)
             export QUERY_PROTEOME="${PROTEOME_ARG:-${NETHOME}/genomes/GCF_036669905.1_Amur/amur_protein.faa}"
@@ -140,6 +139,7 @@ configure_species() {
             ;;
         Nvec)
             export QUERY_PROTEOME="${PROTEOME_ARG:-${NVEC_PROTEOME}}"
+            export SPECIES_GFF3="${SPECIES_GFF3:-${NETHOME}/genomes/NV2_Nvec/NV2g.20240221.gff}"
             export GENOME_VERSION="${GENOME_VERSION:-NV2g.20240221}"
             export PROTEOME_SOURCE="${PROTEOME_SOURCE:-https://simrbase.stowers.org/nematostella}"
             ;;

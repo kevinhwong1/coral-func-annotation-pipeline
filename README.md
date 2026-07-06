@@ -37,14 +37,14 @@ Proteome sequences are not hosted in this repository. Download from the sources 
 | *Stylophora pistillata* | Spis | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Spis_long.pep.fasta) * | `Spis_long.pep.fasta` |
 | *Oculina patagonica* | Opat | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Ocupat_long.pep.fasta) * | `Ocupat_long.pep.fasta` |
 | *Acropora cervicornis* | Acer | [NCBI GCA_032359415.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_032359415.1/) | — |
-| *Orbicella faveolata* | Ofav | [NCBI GCA_042242905.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_042242905.1/) | — |
+| *Orbicella faveolata* | Ofav | University of Miami long-read assembly (internal; Ofav_gen_17) | `Orbicella_faveolata_gen_17.proteins.fa` |
 | *Xenia* spp. | Xspp | [Carnegie Endosymbiosis](https://cmo.carnegiescience.edu/endosymbiosis/genome/) | `xenSp1.proteins.fa` |
 | *Acropora muricata* | Amur | [NCBI GCF_036669905.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_036669905.1/) | — |
 | *Nematostella vectensis* | Nvec | [SimrBase](https://simrbase.stowers.org/nematostella) | `NV2g.20240221.protein.fa` |
 
 > For NCBI genomes, download the predicted protein FASTA (`*_protein.faa`) using the NCBI Datasets CLI: `datasets download genome accession <GCA_ID> --include protein`. Proteomes from GitHub (Amil, Spis, Opat) must be downloaded via the GitHub interface or `git clone` and transferred to the cluster manually.
 >
-> *Nematostella vectensis* (Nvec) is used as an outgroup in OrthoFinder and will be annotated in a future pipeline run.
+> *Nematostella vectensis* (Nvec) serves as a cnidarian outgroup in OrthoFinder and is also fully annotated as a target species.
 
 ### Annotation Results
 
@@ -56,10 +56,10 @@ Proteome sequences are not hosted in this repository. Download from the sources 
 | *Stylophora pistillata* | Spis | | | | | | | | | | planned |
 | *Oculina patagonica* | Opat | | | | | | | | | | planned |
 | *Acropora cervicornis* | Acer | 28,059 | 24.4% | 18.5% | 8.3% | 0.0% | 48.7% | 62.0% | 10.0% | 28.0% | 2026-06-18 |
-| *Orbicella faveolata* | Ofav | | | | | | | | | | planned |
+| *Orbicella faveolata* | Ofav | 32,172 | 22.9% | 18.8% | 13.4% | 0.1% | 44.8% | 62.1% | 12.9% | 25.0% | 2026-06-24 |
 | *Xenia* spp. | Xspp | | | | | | | | | | planned |
 | *Acropora muricata* | Amur | | | | | | | | | | planned |
-| *Nematostella vectensis* | Nvec | | | | | | | | | | planned |
+| *Nematostella vectensis* | Nvec | 32,495 | 21.5% | 24.6% | 12.0% | 0.1% | 41.7% | 65.7% | 11.1% | 23.2% | 2026-07-06 |
 
 ---
 
@@ -70,7 +70,7 @@ Eight jobs are submitted per species via LSF/BSUB. BSUB job scripts are generate
 | Job | Tool | Purpose | Queue | Wall time |
 |-----|------|---------|-------|-----------|
 | 01 | eggNOG-mapper v2 | Orthology, GO, KEGG, COG | bigmem | 12 hr |
-| 02 | OrthoFinder v2 | Phylogenetic orthologs (human, mouse, *N. vectensis*) | bigmem | 120 hr |
+| 02 | OrthoFinder v3.1.0 | Phylogenetic orthologs (human, mouse, *N. vectensis*) | bigmem | 120 hr |
 | 03 | InterProScan 5.78-109.0 | Domain annotation (17 databases) | bigmem | 48 hr |
 | 04 | DIAMOND v2.2.1 | Reciprocal best hits vs SwissProt | bigmem | 8 hr |
 | 05 | SignalP 6.0 | Signal peptide prediction | general | 20 hr |
@@ -205,7 +205,7 @@ Genes are classified along four independent axes. Full logic is in [`docs/classi
 | Tool | Version | Publication |
 |------|---------|-------------|
 | eggNOG-mapper | v2 | [Cantalapiedra et al. 2021](https://doi.org/10.1093/molbev/msab293) |
-| OrthoFinder | v2 | [Emms & Kelly 2019](https://doi.org/10.1186/s13059-019-1832-y) |
+| OrthoFinder | v3.1.0 | [Emms & Kelly 2019](https://doi.org/10.1186/s13059-019-1832-y) |
 | InterProScan | 5.78-109.0 | [Jones et al. 2014](https://doi.org/10.1093/bioinformatics/btu031) |
 | DIAMOND | v2.2.1 | [Buchfink et al. 2021](https://doi.org/10.1038/s41592-021-01101-x) |
 | SignalP | 6.0 | [Teufel et al. 2022](https://doi.org/10.1038/s41587-021-01156-3) |
@@ -222,7 +222,7 @@ Parameters for each annotation step. Tools were run with default parameters unle
 | Step | Tool | Parameters |
 |------|------|------------|
 | eggNOG orthology | eggNOG-mapper v2 | Default sensitivity (`--sensmode default`); eggNOG 5.0 database |
-| Ortholog inference | OrthoFinder v2 | MSA mode (`-M msa`); 4 species: coral, human, mouse, *N. vectensis* |
+| Ortholog inference | OrthoFinder v3.1.0 | MSA mode (`-M msa`); 4 species: coral, human, mouse, *N. vectensis* |
 | Domain annotation | InterProScan 5.78-109.0 | Per-database cutoffs as distributed (Pfam uses GA bit-score thresholds; PANTHER e-value ≤ 1e-3; other databases use database-specific defaults). No user-level e-value filter applied. |
 | RBH vs SwissProt | BLAST+ blastp | e-value ≤ 1e-5; `-max_target_seqs 1` (applied in both directions independently) |
 | Signal peptide | SignalP 6.0 | `--mode slow-sequential`; `--organism eukarya`; classification threshold set by model output (no user-adjustable cutoff) |

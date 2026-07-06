@@ -883,7 +883,11 @@ def parse_eggnog(eggnog_file):
 
 
 def parse_orthofinder(of_results_dir, species):
-    """Parse OrthoFinder ortholog tables."""
+    """Parse OrthoFinder ortholog tables.
+
+    Supports both OrthoFinder v2 format (Orthologues/Orthologues_{species}/*.tsv)
+    and OrthoFinder v3 format (Orthologues/{Species}.tsv flat files).
+    """
     print("  Parsing OrthoFinder results...")
     of_dir = Path(of_results_dir)
     # Auto-detect dated subdirectory (e.g. Results_Jun05, Results_Jun16)
@@ -892,50 +896,122 @@ def parse_orthofinder(of_results_dir, species):
         if dated:
             of_dir = dated[-1]
             print(f"    OrthoFinder: auto-detected results dir: {of_dir.name}")
-    orthologue_dir = of_dir / "Orthologues" / f"Orthologues_{species}"
 
+    orthologue_dir = of_dir / "Orthologues"
     if not orthologue_dir.exists():
         print(f"    WARNING: {orthologue_dir} not found. Returning empty.")
         return pd.DataFrame()
 
+    # Detect format: v3 has flat TSV files, v2 has subdirectories
+    flat_tsvs = list(orthologue_dir.glob("*.tsv"))
+    v2_subdir = orthologue_dir / f"Orthologues_{species}"
+
     result = {}
 
-    for tsv_file in orthologue_dir.glob("*.tsv"):
-        other_species = tsv_file.stem.replace(f"{species}__v__", "").replace(f"__v__{species}", "")
-        try:
-            df = pd.read_csv(tsv_file, sep='\t', header=0)
-        except Exception:
-            continue
+    if flat_tsvs:
+        # OrthoFinder v3 format: Orthologues/Hsap.tsv, Mmus.tsv, etc.
+        # Each file has columns: Orthogroup, {Species1}, {Species2} (pairwise)
+        # We need the file for our species paired with each reference
+        print(f"    OrthoFinder: detected v3 flat TSV format")
 
-        cols = df.columns.tolist()
-        query_col = next((c for c in cols if species in c), None)
-        other_col = next((c for c in cols if other_species in c and c != query_col), None)
-        og_col    = next((c for c in cols if 'orthogroup' in c.lower() or c == cols[0]), cols[0])
+        # Load orthogroups file for orthogroup assignments
+        og_file = of_dir / "Orthogroups" / "Orthogroups.tsv"
+        og_lookup = {}  # gene -> orthogroup
+        if og_file.exists():
+            og_df = pd.read_csv(og_file, sep='\t', index_col=0)
+            sp_col = next((c for c in og_df.columns if species in c), None)
+            if sp_col:
+                for og_id, row in og_df.iterrows():
+                    genes_str = str(row[sp_col]) if pd.notna(row[sp_col]) else ''
+                    for g in genes_str.split(','):
+                        g = g.strip()
+                        if g:
+                            og_lookup[g] = og_id
 
-        if not query_col or not other_col:
-            continue
+        # Parse each species TSV file
+        for tsv_file in flat_tsvs:
+            ref_species = tsv_file.stem  # e.g. Hsap, Mmus, Nvec
+            if ref_species == species:
+                continue
+            try:
+                df = pd.read_csv(tsv_file, sep='\t', header=0)
+            except Exception:
+                continue
 
-        for _, row in df.iterrows():
-            orthogroup  = str(row[og_col])
-            query_genes = str(row[query_col]).split(',') if pd.notna(row[query_col]) else []
-            other_genes = str(row[other_col]).split(',') if pd.notna(row[other_col]) else []
-            query_genes = [g.strip() for g in query_genes if g.strip()]
-            other_genes = [g.strip() for g in other_genes if g.strip()]
+            cols = df.columns.tolist()
+            # v3 columns: Orthogroup, Species1, Species2 (pairwise between query and ref)
+            query_col = next((c for c in cols if species in c), None)
+            other_col = next((c for c in cols if ref_species in c), None)
+            og_col = cols[0]  # first col is always Orthogroup
 
-            relationship = "one-to-one"   if len(query_genes) == 1 and len(other_genes) == 1 else \
-                           "one-to-many"  if len(query_genes) == 1 else "many-to-many"
+            if not query_col or not other_col:
+                continue
 
-            for qg in query_genes:
-                if qg not in result:
-                    result[qg] = {'gene_id': qg, 'of_orthogroup': orthogroup,
-                                  'of_human_ortholog': '', 'of_mouse_ortholog': '',
-                                  'of_nvec_ortholog': '', 'of_relationship': relationship}
-                if 'Hsap' in other_species:
-                    result[qg]['of_human_ortholog'] = ','.join(other_genes[:3])
-                elif 'Mmus' in other_species:
-                    result[qg]['of_mouse_ortholog'] = ','.join(other_genes[:3])
-                elif 'Nvec' in other_species:
-                    result[qg]['of_nvec_ortholog']  = ','.join(other_genes[:3])
+            for _, row in df.iterrows():
+                orthogroup  = str(row[og_col])
+                query_genes = str(row[query_col]).split(',') if pd.notna(row[query_col]) else []
+                other_genes = str(row[other_col]).split(',') if pd.notna(row[other_col]) else []
+                query_genes = [g.strip() for g in query_genes if g.strip()]
+                other_genes = [g.strip() for g in other_genes if g.strip()]
+
+                relationship = "one-to-one"  if len(query_genes) == 1 and len(other_genes) == 1 else \
+                               "one-to-many" if len(query_genes) == 1 else "many-to-many"
+
+                for qg in query_genes:
+                    if qg not in result:
+                        result[qg] = {'gene_id': qg,
+                                      'of_orthogroup': og_lookup.get(qg, orthogroup),
+                                      'of_human_ortholog': '', 'of_mouse_ortholog': '',
+                                      'of_nvec_ortholog': '', 'of_relationship': relationship}
+                    if 'Hsap' in ref_species:
+                        result[qg]['of_human_ortholog'] = ','.join(other_genes[:3])
+                    elif 'Mmus' in ref_species:
+                        result[qg]['of_mouse_ortholog'] = ','.join(other_genes[:3])
+                    elif 'Nvec' in ref_species:
+                        result[qg]['of_nvec_ortholog']  = ','.join(other_genes[:3])
+
+    elif v2_subdir.exists():
+        # OrthoFinder v2 format: Orthologues/Orthologues_{species}/*.tsv
+        print(f"    OrthoFinder: detected v2 subdirectory format")
+        for tsv_file in v2_subdir.glob("*.tsv"):
+            other_species = tsv_file.stem.replace(f"{species}__v__", "").replace(f"__v__{species}", "")
+            try:
+                df = pd.read_csv(tsv_file, sep='\t', header=0)
+            except Exception:
+                continue
+
+            cols = df.columns.tolist()
+            query_col = next((c for c in cols if species in c), None)
+            other_col = next((c for c in cols if other_species in c and c != query_col), None)
+            og_col    = next((c for c in cols if 'orthogroup' in c.lower() or c == cols[0]), cols[0])
+
+            if not query_col or not other_col:
+                continue
+
+            for _, row in df.iterrows():
+                orthogroup  = str(row[og_col])
+                query_genes = str(row[query_col]).split(',') if pd.notna(row[query_col]) else []
+                other_genes = str(row[other_col]).split(',') if pd.notna(row[other_col]) else []
+                query_genes = [g.strip() for g in query_genes if g.strip()]
+                other_genes = [g.strip() for g in other_genes if g.strip()]
+
+                relationship = "one-to-one"   if len(query_genes) == 1 and len(other_genes) == 1 else \
+                               "one-to-many"  if len(query_genes) == 1 else "many-to-many"
+
+                for qg in query_genes:
+                    if qg not in result:
+                        result[qg] = {'gene_id': qg, 'of_orthogroup': orthogroup,
+                                      'of_human_ortholog': '', 'of_mouse_ortholog': '',
+                                      'of_nvec_ortholog': '', 'of_relationship': relationship}
+                    if 'Hsap' in other_species:
+                        result[qg]['of_human_ortholog'] = ','.join(other_genes[:3])
+                    elif 'Mmus' in other_species:
+                        result[qg]['of_mouse_ortholog'] = ','.join(other_genes[:3])
+                    elif 'Nvec' in other_species:
+                        result[qg]['of_nvec_ortholog']  = ','.join(other_genes[:3])
+    else:
+        print(f"    WARNING: No orthologues found in {orthologue_dir}. Returning empty.")
+        return pd.DataFrame()
 
     df_out = pd.DataFrame(list(result.values())) if result else pd.DataFrame()
     print(f"    OrthoFinder: {len(df_out):,} genes with orthologs")
