@@ -33,7 +33,7 @@ Proteome sequences are not hosted in this repository. Download from the sources 
 |---------|--------|--------|---------------|
 | *Galaxea fascicularis* | Gfas | [gfas.reefgenomics.org](http://gfas.reefgenomics.org/) | `gfas_1.0.proteins.fasta` |
 | *Pocillopora damicornis* | Pdam | [pdam.reefgenomics.org](http://pdam.reefgenomics.org/) | `pdam_proteins.fasta` |
-| *Acropora millepora* | Amil | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Amil_long.pep.fasta) * | `Amil_long.pep.fasta` |
+| *Acropora millepora* | Amil | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Amil_long.pep.fasta) * | `Amil_long.pep.mod.fasta` |
 | *Stylophora pistillata* | Spis | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Spis_long.pep.fasta) * | `Spis_long.pep.mod.fasta` |
 | *Oculina patagonica* | Opat | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Ocupat_long.pep.fasta) * | `Ocupat_long.pep.fasta` |
 | *Acropora cervicornis* | Acer | [NCBI GCA_032359415.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_032359415.1/) | — |
@@ -52,7 +52,7 @@ Proteome sequences are not hosted in this repository. Download from the sources 
 |---------|--------|---------|------|--------|--------|-------------|--------------|-------|---------|------|----------|
 | *Galaxea fascicularis* | Gfas | 22,418 | 31.2% | 23.0% | 10.7% | 0.1% | 35.0% | 71.6% | 9.9% | 18.4% | 2026-06-05 |
 | *Pocillopora damicornis* | Pdam | 26,077 | 27.1% | 21.6% | 10.1% | 0.1% | 41.2% | 64.3% | 9.3% | 26.4% | 2026-06-16 |
-| *Acropora millepora* | Amil | | | | | | | | | | planned |
+| *Acropora millepora* | Amil | 28,183 | 23.1% | 19.1% | 7.9% | 0.1% | 49.8% | 64.2% | 11.8% | 24.0% | 2026-07-13 |
 | *Stylophora pistillata* | Spis | 29,419 | 25.2% | 18.9% | 14.6% | 0.2% | 41.1% | 68.2% | 15.5% | 16.3% | 2026-07-09 |
 | *Oculina patagonica* | Opat | | | | | | | | | | planned |
 | *Acropora cervicornis* | Acer | 28,059 | 24.4% | 18.5% | 8.3% | 0.0% | 48.7% | 62.0% | 10.0% | 28.0% | 2026-06-18 |
