@@ -1,0 +1,137 @@
+
+============================================================
+  08_merge_annotate.py v3 — Species: Ocupat
+  Loaded 6,499 Pfam name mappings
+============================================================
+
+--- Parsing annotation layers ---
+  Parsing eggNOG annotations...
+    eggNOG: 24,245 annotations
+  Parsing OrthoFinder results...
+    OrthoFinder: auto-detected results dir: Results_Jul14
+    OrthoFinder: detected subdirectory format (OrthoFinder v3.1.0)
+    OrthoFinder: 26,023 genes with orthologs
+  Parsing InterProScan results...
+    InterProScan: 29,546 annotated genes
+  Parsing RBH hits...
+    RBH: 7,981 reciprocal best hits
+  Parsing SignalP predictions...
+    SignalP: 39,482 predictions
+  Parsing GFF3 for genomic coordinates...
+    Gene-to-protein map: 39,482 locus tag -> FASTA ID entries
+    GFF3: 39,482 transcripts, 14 scaffolds
+  Parsing DeepTMHMM predictions...
+    DeepTMHMM: 39,462 genes, 7,666 with >=1 TM helix
+  Parsing Tier 3 HMM hits...
+    Tier 3 HMM: 8,812 genes with domain hits
+  Parsing Tier 4 BLAST hits...
+    Tier 4 BLAST: 137 genes with hits
+
+--- Building gene universe ---
+  Seeded from proteome FASTA: 39,482 genes
+  Total genes: 39,482
+
+--- Merging annotation layers ---
+  Merged table: 39,482 genes × 40 columns
+
+--- Classifying genes ---
+  protein_group_secondary: 95 genes with dual roles
+
+--- Adding derived columns ---
+  best_human_gene_name: 20,215 genes
+  all_go_terms: 23,341 genes
+  cog_description: 21,815 genes
+  annotation_status: Light=25,444 (64.4%), Partial=5,058 (12.8%), Dark=8,980 (22.7%)
+  interpro_pfam_names: 26,320 genes
+  isoelectric_point / MW: 39,482 genes
+  Fetching KEGG pathway names...
+    6852 unique KOs — using KEGG batch API (10 per call)...
+    Progress: 500/6852 KOs processed...
+    Progress: 1000/6852 KOs processed...
+    Progress: 1500/6852 KOs processed...
+    Progress: 2000/6852 KOs processed...
+    Progress: 2500/6852 KOs processed...
+    Progress: 3000/6852 KOs processed...
+    Progress: 3500/6852 KOs processed...
+    Progress: 4000/6852 KOs processed...
+    Progress: 4500/6852 KOs processed...
+    Progress: 5000/6852 KOs processed...
+    Progress: 5500/6852 KOs processed...
+    Progress: 6000/6852 KOs processed...
+    Progress: 6500/6852 KOs processed...
+    Mapped 4161 KOs (0 batches failed)
+  kegg_pathway_names: 8,781 genes
+
+--- Classification summary ---
+
+Confidence tiers:
+  Gold           :  7,260  (18.4%)
+  Silver         :  9,215  (23.3%)
+  Bronze         :  5,442  (13.8%)
+  Informative    :     87  (0.2%)
+  Unclassified   : 17,478  (44.3%)
+
+Top 25 protein groups:
+  Unclassified                            : 29,851
+  GPCR                                    : 1,210
+  ECM_Adhesion                            : 1,179
+  Calcification_Universal                 : 1,002
+  Transcription_Factor                    :   893
+  Innate_Immunity_PRR                     :   801
+  Kinase                                  :   563
+  Innate_Immunity_Signalling              :   557
+  Lectin_Receptor                         :   554
+  Signalling                              :   500
+  Innate_Immunity_Effector                :   435
+  Ion_Channel                             :   376
+  Symbiosis                               :   343
+  AMP_Venom                               :   285
+  Innate_Immunity_Antiviral               :   212
+  Neuron_Neuropeptide                     :   166
+  HSP_Chaperone                           :   152
+  Tier4_SCRiP                             :    91
+  Stem_Cell_Proliferation                 :    83
+  Stem_Cell_GMP                           :    64
+  Calcification_Signalling                :    59
+  Calcification_IonTransport              :    57
+  Tier4_SOMP                              :    28
+  Tier4_Neuropep                          :    13
+  Stem_Cell_HSC                           :     8
+
+CellChat roles:
+  Neither                       : 26,122
+  Receptor_candidate            :  4,625
+  Receptor                      :  4,515
+  Ligand                        :  4,220
+
+--- Writing master annotation table ---
+  Written: /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/Ocupat_master_annotation.tsv
+  Shape: 39,482 genes × 53 columns
+  Columns: ['ocupat_gene_id', 'eggnog_ortholog', 'eggnog_human_gene', 'eggnog_description', 'eggnog_go_terms', 'eggnog_kegg_ko', 'eggnog_kegg_pathway', 'eggnog_cog_cat', 'eggnog_pfams', 'of_orthogroup', 'of_human_ortholog', 'of_mouse_ortholog', 'of_nvec_ortholog', 'of_relationship', 'interpro_pfam', 'interpro_panther', 'interpro_go_terms', 'rbh_swissprot_acc', 'rbh_gene_name', 'rbh_pct_identity', 'rbh_evalue', 'signalp_prediction', 'signalp_prob', 'tier3_domain_hits', 'tier3_best_evalue', 'tier4_blast_hit', 'tier4_source', 'tier4_pct_identity', 'tier4_evalue', 'tier4_bitscore', 'scaffold', 'gene_start', 'gene_end', 'strand', 'gene_length_bp', 'n_exons', 'tmhmm_topology', 'tmhmm_n_tmrs', 'protein_length_aa', 'protein_sequence', 'confidence_tier', 'protein_group', 'protein_subgroup', 'protein_group_secondary', 'cellchat_role', 'best_human_gene_name', 'all_go_terms', 'cog_description', 'interpro_pfam_names', 'annotation_status', 'isoelectric_point', 'molecular_weight_kda', 'kegg_pathway_names']
+
+--- Exporting gene lists ---
+  Light_genes: 25,444 genes
+  Partial_genes: 5,058 genes
+  Dark_genes: 8,980 genes
+  CellChat_Ligand: 4,220 genes
+  CellChat_Receptor: 4,515 genes
+  CellChat_Receptor_candidate: 4,625 genes
+
+  Gene lists written: 24 functional groups
+  Gene lists directory: /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/gene_lists/
+
+  R helper: /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/Ocupat_load_gene_lists.R
+
+  Annotation summary: /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/Ocupat_annotation_summary.md
+
+============================================================
+  Pipeline complete for Ocupat
+  Master table : /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/Ocupat_master_annotation.tsv
+  Gene lists   : /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/gene_lists/
+  R helper     : /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/Ocupat_load_gene_lists.R
+  Summary MD   : /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/Ocupat_annotation_summary.md
+  Merge log    : /scratch/dark_genes/annotation_pipeline/runs/Ocupat_20260713/08_final/Ocupat_merge_run.out
+============================================================
+
+
+--- Staging outputs to /nethome/kxw755/github_upload ---

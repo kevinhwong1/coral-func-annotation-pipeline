@@ -54,7 +54,7 @@ Proteome sequences are not hosted in this repository. Download from the sources 
 | *Pocillopora damicornis* | Pdam | 26,077 | 27.1% | 21.6% | 10.1% | 0.1% | 41.2% | 64.3% | 9.3% | 26.4% | 2026-06-16 |
 | *Acropora millepora* | Amil | 28,183 | 23.1% | 19.1% | 7.9% | 0.1% | 49.8% | 64.2% | 11.8% | 24.0% | 2026-07-13 |
 | *Stylophora pistillata* | Spis | 29,419 | 25.2% | 18.9% | 14.6% | 0.2% | 41.1% | 68.2% | 15.5% | 16.3% | 2026-07-09 |
-| *Oculina patagonica* | Opat | | | | | | | | | | planned |
+| *Oculina patagonica* | Opat | 39,482 | 18.4% | 23.3% | 13.8% | 0.2% | 44.3% | 64.4% | 12.8% | 22.7% | 2026-07-14 |
 | *Acropora cervicornis* | Acer | 28,059 | 24.4% | 18.5% | 8.3% | 0.0% | 48.7% | 62.0% | 10.0% | 28.0% | 2026-06-18 |
 | *Orbicella faveolata* | Ofav | 32,172 | 22.9% | 18.8% | 13.4% | 0.1% | 44.8% | 62.1% | 12.9% | 25.0% | 2026-06-24 |
 | *Xenia* spp. | Xspp | | | | | | | | | | planned |
