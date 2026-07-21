@@ -38,7 +38,7 @@ Proteome sequences are not hosted in this repository. Download from the sources 
 | *Oculina patagonica* | Opat | [sebepedroslab/oculina-coral-sc-atlas](https://github.com/sebepedroslab/oculina-coral-sc-atlas/blob/master/data/reference/Ocupat_long.pep.fasta) * | `Ocupat_long.pep.fasta` |
 | *Acropora cervicornis* | Acer | [NCBI GCA_032359415.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_032359415.1/) | — |
 | *Orbicella faveolata* | Ofav | University of Miami long-read assembly (internal; Ofav_gen_17) | `Orbicella_faveolata_gen_17.proteins.fa` |
-| *Xenia* spp. | Xspp | [Carnegie Endosymbiosis](https://cmo.carnegiescience.edu/endosymbiosis/genome/) | `xenSp1.proteins.fa` |
+| *Xenia* spp. | Xspp | [NCBI GCF_021976095.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_021976095.1/) (RefSeq mirror of Hu et al. 2020 Carnegie assembly, XeniaSp_v1) | — |
 | *Acropora muricata* | Amur | [NCBI GCF_036669905.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_036669905.1/) | — |
 | *Nematostella vectensis* | Nvec | [SimrBase](https://simrbase.stowers.org/nematostella) | `NV2g.20240221.protein.fa` |
 
@@ -57,7 +57,7 @@ Proteome sequences are not hosted in this repository. Download from the sources 
 | *Oculina patagonica* | Opat | 39,482 | 18.4% | 23.3% | 13.8% | 0.2% | 44.3% | 64.4% | 12.8% | 22.7% | 2026-07-14 |
 | *Acropora cervicornis* | Acer | 28,059 | 24.4% | 18.5% | 8.3% | 0.0% | 48.7% | 62.0% | 10.0% | 28.0% | 2026-06-18 |
 | *Orbicella faveolata* | Ofav | 32,172 | 22.9% | 18.8% | 13.4% | 0.1% | 44.8% | 62.1% | 12.9% | 25.0% | 2026-06-24 |
-| *Xenia* spp. | Xspp | | | | | | | | | | planned |
+| *Xenia* spp. | Xspp | 26,116 | 25.4% | 29.0% | 11.1% | 0.3% | 34.2% | 73.8% | 12.1% | 14.1% | 2026-07-20 |
 | *Acropora muricata* | Amur | 42,312 | 17.3% | 23.4% | 19.6% | 0.2% | 39.5% | 69.0% | 17.9% | 13.0% | 2026-07-20 |
 | *Nematostella vectensis* | Nvec | 32,495 | 21.5% | 24.6% | 12.0% | 0.1% | 41.7% | 65.7% | 11.1% | 23.2% | 2026-07-06 |
 
