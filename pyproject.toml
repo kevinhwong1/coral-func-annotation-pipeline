@@ -1,0 +1,7 @@
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+# E/W = pycodestyle (PEP 8), F = pyflakes, N = pep8-naming, I = import order
+select = ["E", "W", "F", "N", "I"]
